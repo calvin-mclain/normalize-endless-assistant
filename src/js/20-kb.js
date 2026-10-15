@@ -39,7 +39,7 @@ NZ.kb = (function () {
       ability: ["NORMALIZE"], abilityWhy: "Normalize is what Entrainment hands to the boss.",
       passive: ["SCRAPPY"], passiveOptional: true, passiveWhy: "Scrappy lets its Normal-type moves hit Ghosts while it carries.",
       natureNames: ["Adamant"], natureWhy: "Adamant for the carry phase.",
-      eggMoves: [{ key: "STORM_THROW", why: "The single-target move it starts with." }, { key: "LANDS_WRATH", why: "Stronger, and Ground-type. Optional.", optional: true }],
+      eggMoves: [{ key: "STORM_THROW", why: "The single-target move it starts with." }, { key: "LANDS_WRATH", why: "A stronger spread move than Rock Slide (90 power, never misses). Ground-type when Neutralizing Gas turns Normalize off. Optional.", optional: true }],
       tms: ["ROCK_SLIDE", "DARKEST_LARIAT", "ENDURE"],
       tmWhy: "Rock Slide for doubles, Darkest Lariat as the single-target alternative, Endure for berry boosts.",
       alternatives: ["SKITTY"],
@@ -276,7 +276,7 @@ NZ.kb = (function () {
         "Multi-hit moves and Parental Bond kill through Sturdy outright. That is a Normalize or Scrappy problem, not a healing one."
       ] },
     { q: "Doubles stop happening",
-      intro: "Gouot was not on the field when the previous battle ended, or it was fainted or its abilities were suppressed (Gastro Acid, Neutralizing Gas). A fainted or suppressed lure does not count. You never need to pick a lure item: put it right on the field instead. Forced bosses are never doubles." },
+      intro: "Gouot was not on the field when the previous battle ended, or it was fainted or its abilities were suppressed (Gastro Acid, Neutralizing Gas). A fainted or suppressed lure does not count. Once you run, a lure item is never needed: get Gouot back on the field instead. In the carry phase Illuminate is the only lure on the field, so hold a lure item. Forced bosses are never doubles." },
     { q: "The wave started with the wrong Pokémon out",
       intro: "Do not switch the right one straight in: a normal switch takes a hit. Switch to one of your two extra Pokémon and let it be knocked out. The Pokémon you send in after a faint enters without being attacked, so the correct one comes in safely." },
     { q: "Mat Block fails", intro: "It only works on Gouot's first turn after entering the field. Use it on the switch-in turn and Dark Void after." },
@@ -306,7 +306,7 @@ NZ.kb = (function () {
     "Down a Master Ball: lock the Master tier and reroll until one appears.",
     "Down on Rogue Balls: reroll for the pack of five.",
     "Never an egg. Lucky and Golden Eggs are not sold: they only come off wild Pokémon, by Thief, Mini Black Hole or a catch.",
-    "Never a lure. The lure abilities do that job.",
+    "Never a lure once you run: Gouot and Teddiurk's lure abilities guarantee every wave. In the carry phase, take one.",
     "Otherwise anything Ultra tier or better.",
     "With a Lock Capsule: reroll normally until you see two Ultra-tier items or one Rogue-tier item, then lock and reroll."
   ];

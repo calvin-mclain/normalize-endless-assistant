@@ -24,8 +24,8 @@
   function carryKit(ctx) {
     var m = ctx.assign.byRole.carry;
     var kit = [
-      { keys: ["ROCK_SLIDE"], label: "Rock Slide (TM)", why: "spread move for doubles" },
-      { keys: ["STORM_THROW", "DARKEST_LARIAT", "LANDS_WRATH"], label: "Storm Throw, Darkest Lariat or Land's Wrath", why: "single targets; Land's Wrath is the strongest and Ground-type" },
+      { keys: ["ROCK_SLIDE", "LANDS_WRATH"], label: "Rock Slide (TM) or Land's Wrath", why: "spread move for doubles; Land's Wrath is stronger, and Ground-type when Neutralizing Gas turns Normalize off" },
+      { keys: ["STORM_THROW", "DARKEST_LARIAT"], label: "Storm Throw or Darkest Lariat", why: "single targets" },
       { keys: ["ENDURE"], label: "Endure (TM)", why: "survive a hit and collect berry boosts" },
       { keys: ["ENTRAINMENT", "PROTECT"], label: "Protect, until Entrainment arrives", why: "the last slot is held for Entrainment" }
     ];

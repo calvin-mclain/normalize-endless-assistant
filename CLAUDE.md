@@ -22,7 +22,13 @@ assistant tab (`window.opener.postMessage`, game origin checked on receipt). Kee
 
 ## Strategy facts the player has corrected (do not regress)
 
-- Never buy lures. The lure abilities do that job.
+- Never buy lures once running: Gouot and Teddiurk's lure abilities guarantee every wave. In the carry phase,
+  take one: Regigigas has no lure, so Illuminate is the only source on the field (1 in 2 normal waves alone,
+  guaranteed with a lure item). Each lure item tier and each lure ability or passive on the field divides the
+  odds by 4 (`BattleScene.getDoubleBattleChance`).
+- Land's Wrath is a spread move (`ALL_NEAR_ENEMIES`), in the Rock Slide slot, not the single-target slot.
+- Check strategy and mechanics claims against the PokéRogue source at the commit the data came from, not only
+  the guide notes.
 - Lucky Eggs and Golden Eggs are never in the shop. They only come off wild Pokémon (Thief, Mini Black Hole,
   or a catch).
 - Vitamins cannot be stolen. Carbos come through fuse-and-dump instead.

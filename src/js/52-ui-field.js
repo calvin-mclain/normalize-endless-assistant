@@ -84,7 +84,7 @@
         [0, 1, 2, 3].map(function (n) { return '<tr><th class="num">' + n + "</th><td>" + odds(adv.doubleChance(1, n)) + "</td><td>" + odds(adv.doubleChance(10, n)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
     }
     if (phase === "carry") {
-      body += '<ul class="bullets"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>You never need to pick a lure item. Doubles become guaranteed as the lure fusions land: each lure ability or passive on the field divides the odds by 4.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
+      body += '<ul class="bullets"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
     } else {
       body += '<ul class="bullets"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed, ever. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
     }
