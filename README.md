@@ -26,5 +26,7 @@ node build/build.mjs
 
 That writes `index.html` plus `dist/` copies. Needs Node 18 or later and no packages.
 
+To test: `npm install`, `npx playwright install chromium` once, then `npm test`.
+
 Game data in `data/game-data.json` was extracted from the PokéRogue source (`main`, 1.12.0.11).
 PokéRogue and Pokémon names belong to their respective owners; this is an unofficial fan tool.

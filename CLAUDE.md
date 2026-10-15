@@ -39,6 +39,14 @@ localStorage keys `data_<user>` and `sessionData<slot>_<user>`.
 
 ## Tests
 
-The original test suite (advisor, data, save decrypt, 45 Playwright UI checks) depended on a local
-checkout of the PokéRogue source for fixture saves and was not carried into this repo. When changing
-advisor logic, at minimum load the page and check the sample saves on every tab with no console errors.
+Run `npm test` before every commit (after `npm install` and `npx playwright install chromium` once).
+
+- `test/data.test.mjs`, `test/save.test.mjs`, `test/advisor.test.mjs` — logic only, plain Node (`npm run test:logic`).
+- `test/ui.test.mjs` — rebuilds, then drives the page in headless Chromium: every tab and control, the three
+  sync channels, the live link across two origins, and a check that the page has no way to send input or
+  write game storage (`npm run test:ui`).
+- `test/fixtures/saves/` — PokéRogue's own test saves (see the README there).
+- `npm run shots` writes screenshots to `test/shots/` for a visual check.
+
+Add a test with every advisor change. CI (`.github/workflows/test.yml`) runs the suite and fails if the
+committed `index.html` does not match a fresh build.
