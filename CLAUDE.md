@@ -46,6 +46,7 @@ localStorage keys `data_<user>` and `sessionData<slot>_<user>`.
 ## Tests
 
 Run `npm test` before every commit (after `npm install` and `npx playwright install chromium` once).
+Commit `package-lock.json` with any dependency change; CI installs from it with `npm ci`.
 
 - `test/data.test.mjs`, `test/save.test.mjs`, `test/advisor.test.mjs` — logic only, plain Node (`npm run test:logic`).
 - `test/ui.test.mjs` — rebuilds, then drives the page in headless Chromium: every tab and control, the three
