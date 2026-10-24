@@ -55,7 +55,7 @@ NZ.data = (function () {
     var s = sp(id);
     if (!s) return "Species #" + id;
     var f = s.f && s.f[formIndex || 0];
-    if (f && f[0] && f[1] && f[1] !== "Normal") return s.n + " (" + f[1] + ")";
+    if (f && f[0] && f[1] && f[1] !== "Normal" && s.n.slice(-f[1].length - 2) !== "(" + f[1] + ")") return s.n + " (" + f[1] + ")";
     return s.n;
   }
 
@@ -267,6 +267,11 @@ NZ.data = (function () {
   }
 
   function endPool() { return D.end; }
+  /** Timed events running on the given day (YYYY-MM-DD, UTC; today by default). The game ends an event at 00:00 UTC on its end date. */
+  function activeEvents(day) {
+    day = day || new Date().toISOString().slice(0, 10);
+    return (D.events || []).filter(function (e) { return e.from <= day && day < e.to; });
+  }
   function allSpeciesIds() { return Object.keys(D.sp).map(Number); }
   function set(kind, name) { return (D[kind][name] || []).slice(); }
   function biomeName(id) { return D.biomes[id] || "Biome " + id; }
@@ -277,7 +282,7 @@ NZ.data = (function () {
     canRelearn: canRelearn, withAbility: withAbility, startersWithPassive: startersWithPassive, eggMoves: eggMoves,
     eggMoveOwners: eggMoveOwners, canTm: canTm, fusedTypes: fusedTypes, fuse: fuse, search: search, findByName: findByName,
     typeName: typeName, typeColor: typeColor, natureName: natureName, natureEffect: natureEffect, candyCosts: candyCosts,
-    reducedCost: reducedCost, endPool: endPool, allSpeciesIds: allSpeciesIds, set: set, biomeName: biomeName,
+    reducedCost: reducedCost, endPool: endPool, activeEvents: activeEvents, allSpeciesIds: allSpeciesIds, set: set, biomeName: biomeName,
     M: M, A: A, S: S, meta: null
   };
   return api;

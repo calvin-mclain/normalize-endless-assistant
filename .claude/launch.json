@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "const h=require('http'),f=require('fs'),p=require('path');h.createServer((q,r)=>{let u=decodeURIComponent(q.url.split('?')[0]);if(u==='/')u='/index.html';const file=p.join(process.cwd(),u);f.readFile(file,(e,d)=>{if(e){r.writeHead(404);r.end('not found');return;}const t={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.prsv':'text/plain'}[p.extname(file)]||'application/octet-stream';r.writeHead(200,{'content-type':t});r.end(d);});}).listen(8765,()=>console.log('serving on http://localhost:8765'))"],
+      "port": 8765
+    }
+  ]
+}

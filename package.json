@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build/build.mjs",
+    "data": "node build/update_data.mjs",
     "test:logic": "node test/data.test.mjs && node test/save.test.mjs && node test/advisor.test.mjs",
     "test:ui": "node build/build.mjs && node test/ui.test.mjs",
     "test": "npm run test:logic && npm run test:ui",

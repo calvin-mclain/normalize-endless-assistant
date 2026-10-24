@@ -20,10 +20,9 @@
     }).join("");
     var verdict = b.over
       ? H.callout("warn", b.total + " of 15 points: " + b.over + " over", "Fully reduced, this team costs " + b.floor + ". " + H.teach("Buy candy cost reductions until the six fit. Each reduction takes 1 point off a starter that costs more than 1, then halves it.", "", "span"))
-      : H.callout("good", b.total + " of 15 points: the team fits", b.total < 15 ? (15 - b.total) + " to spare." : "Exactly on the limit.");
-    return H.panel("Starter points", '<div class="meter"><div class="meter-top"><span>Endless gives you 15 starter points</span><strong class="num">' + b.total + " / 15</strong></div>" + bar + "</div>" + verdict +
-      '<ul class="budget">' + rows + "</ul>",
-      ctx.system ? "reductions read from your save" : "set your reductions by hand, or sync");
+      : H.callout("good", b.total + " of 15 points", b.total < 15 ? (15 - b.total) + " to spare." : "Exactly on the limit.");
+    return H.panel("Starter points", '<div class="meter"><div class="meter-top"><span>15 starter points in Endless</span><strong class="num">' + b.total + " / 15</strong></div>" + bar + "</div>" + verdict +
+      '<ul class="budget">' + rows + "</ul>");
   }
 
   function checkRow(role, c) {
@@ -72,25 +71,25 @@
         '<dl class="kv"><dt>Ability / passive</dt><dd>' + h(t.ability) + " / " + h(t.passive) + "</dd><dt>Nature</dt><dd>" + h(t.nature) + (t.tera ? " · Tera Ghost" : "") + "</dd></dl>" +
         '<div class="chips">' + moves + '</div><div class="chips">' + items + "</div>" + H.teach(h(t.why), "note") + "</div>";
     }).join("");
-    return H.panel("What you are building toward", H.teach("Four fusions do everything; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.", "note") +
-      '<div class="team">' + rows + "</div>", "the final team", "", true);
+    return H.panel("Final team", H.teach("Four fusions; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.", "note") +
+      '<div class="team">' + rows + "</div>", "", true);
   }
 
   function variantsPanel() {
     var body = kb.variants.map(function (v) {
       return '<div><div class="check-label">' + h(v.name) + '</div><div class="note">' + h(v.change) + " " + h(v.trade) + "</div></div>";
     }).join("");
-    return H.panel("Variants", body, "if you are missing an unlock", "", true);
+    return H.panel("Variants", body, "", true);
   }
 
   ui.views.party = function (ctx) {
     var syncNote = ctx.system
       ? H.teach(H.callout("good", "Unlocks read from your save", "Passives, hidden abilities, natures, egg moves, IVs and candy counts below come from the system save synced " + h(util.ago(ui.game.at)) + "."), "", "div")
-      : H.teach(H.callout("plain", "Check your unlocks automatically", 'Sync your save and every tick below fills itself in from your real unlocks. <button type="button" class="btn link" data-act="tab" data-tab="sync">Open Sync</button>'), "", "div");
+      : H.teach(H.callout("plain", "Not synced", 'With a synced save, the checks below are filled in from your unlocks. <button type="button" class="btn link" data-act="tab" data-tab="sync">Open Sync</button>'), "", "div");
     var cards = kb.ROLE_ORDER.map(function (role) { return roleCard(role, ctx); }).join("");
     return '<div class="view-head"><p class="eyebrow">Phase 1</p><h1>Party building</h1><p class="lede">Six starters chosen for their passives. Unlock every passive and hidden ability before the run starts: they do not unlock mid-run. Keep the first four unevolved until their fusions.</p></div>' +
       syncNote + budgetPanel(ctx) + '<div class="grid-3">' + cards + "</div>" + '<div class="cols"><div class="col">' + teamPanel() + '</div><div class="col">' + variantsPanel() +
-      '<div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="carry">Team picked: go to Carry</button></div></div></div>';
+      '<div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="carry">Continue to Carry</button></div></div></div>';
   };
 
   ui.on("unlock", function (t) {

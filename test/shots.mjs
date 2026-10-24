@@ -43,6 +43,7 @@ const jobs = {
   "run-boss-light": { width: 1280, height: 900, scheme: "light", tab: "run", sample: "boss" },
   "run-shiny-compact-light": { width: 1280, height: 900, scheme: "light", tab: "run", sample: "shiny", prep: p => p.evaluate(() => NZ.ui.setDensity("compact")) },
   "carry-sample-compact-dark": { width: 1280, height: 900, scheme: "dark", tab: "carry", sample: "carry", prep: p => p.evaluate(() => NZ.ui.setDensity("compact")) },
+  "carry-dex-light": { width: 1280, height: 900, scheme: "light", tab: "carry", sample: "carry", full: false, prep: p => p.locator('.foe .btn[data-act="scout"]').first().click() },
   "sync-light": { width: 1280, height: 900, scheme: "light", tab: "sync" },
   "party-phone": { width: 400, height: 800, scheme: "light", tab: "party" },
   "carry-phone": { width: 400, height: 800, scheme: "dark", tab: "carry", sample: "carry" },

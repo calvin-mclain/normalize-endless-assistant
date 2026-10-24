@@ -161,7 +161,7 @@
     var ion = movesIn(desc, "ionDeluge");
     if (ion.length) add("care", moveNames(ion), "Turns Normal-type moves Electric for the turn, so a Normalized attack can hit a Ghost that turn.");
     var meddle = movesIn(desc, "abilityChange");
-    if (meddle.length) add("care", "Ability moves: " + moveNames(meddle), "It can swap, copy or overwrite abilities, including the Normalize you gave it or Yamazone's Sturdy. Re-check abilities if the fight goes wrong.");
+    if (meddle.length) add("care", "Changes abilities: " + moveNames(meddle), "It can swap, copy or overwrite abilities, including the Normalize you gave it or Yamazone's Sturdy. Re-check abilities if the fight goes wrong.");
     var hb = movesIn(desc, "healBlock").filter(function (m) { return data.mv(m).cat === 2; });
     if (hb.length) add("care", "Heal Block on you", "If it lands on Yamazone, Leech Seed stops healing for 5 turns and Sturdy does not re-arm.");
     var locks = movesIn(desc, "disable").concat(movesIn(desc, "encore"), movesIn(desc, "torment"), movesIn(desc, "imprison"));
@@ -227,14 +227,14 @@
         keys.forEach(function (k) {
           var id = M(k);
           if (desc.exact && desc.moves.indexOf(id) !== -1) {
-            out.push({ kind: "learn", step: step.id, sure: true, text: "Knows " + data.mv(id).name + " right now: " + step.title + " for your " + roleName + ". Catch it and splice." });
+            out.push({ kind: "learn", step: step.id, sure: true, label: "knows " + data.mv(id).name, text: "Knows " + data.mv(id).name + " right now: " + step.title + " for your " + roleName + ". Catch it and splice." });
           } else if (ownMoves.indexOf(id) !== -1) {
             var lvl = data.knowsByLevel(desc.id, desc.form, id);
-            out.push({ kind: "learn", step: step.id, sure: false, rare: !!step.rare,
+            out.push({ kind: "learn", step: step.id, sure: false, rare: !!step.rare, label: data.mv(id).name + " carrier",
               text: (desc.exact ? "Does not know " + data.mv(id).name + " right now, but its species learns it (" + adv.lvlLabel(lvl) + "): fuse, then a Memory Mushroom gets it."
                 : "Its species learns " + data.mv(id).name + " (" + adv.lvlLabel(lvl) + "): " + step.title + " for your " + roleName + ". Check its moves after catching; a Memory Mushroom works once fused.") });
           } else if (data.canRelearn(desc.id, desc.form, id)) {
-            out.push({ kind: "learn", step: step.id, sure: false, text: "An earlier stage learns " + data.mv(id).name + ": once fused, a Memory Mushroom can pull it (" + step.title + ")." });
+            out.push({ kind: "learn", step: step.id, sure: false, label: data.mv(id).name + " by Memory Mushroom", text: "An earlier stage learns " + data.mv(id).name + ": once fused, a Memory Mushroom can pull it (" + step.title + ")." });
           }
         });
       } else if (step.kind === "carbos") {
@@ -244,7 +244,7 @@
           var where = (holder ? holder.name : roleName) + (eff.auto.progress ? " (" + eff.auto.progress[0] + " of " + eff.auto.progress[1] + ")" : "");
           var prior = out.filter(function (o) { return o.kind === "carbos"; })[0];
           if (prior) { prior.text = prior.text.replace(/ and unfuse\.$/, "") + ", or " + where + ", and unfuse."; }
-          else out.push({ kind: "carbos", step: step.id, sure: true, text: "Holds " + n + " Carbos: catch it, fuse it onto " + where + " and unfuse." });
+          else out.push({ kind: "carbos", step: step.id, sure: true, label: n + " Carbos", text: "Holds " + n + " Carbos: catch it, fuse it onto " + where + " and unfuse." });
         }
       } else if (step.kind === "fuse" && step.need !== "normalize") {
         var wantSet = step.need === "sturdy" ? "sturdy" : "lure";
@@ -258,7 +258,7 @@
             out.push({ kind: "fuse", step: step.id, sure: false, weak: true, text: (desc.exact ? "Has " : "Can have ") + data.ab(a).name + ", but the fusion would be " + adv.typeNames(fz) + ": sandstorm still chips it." });
             return;
           }
-          out.push({ kind: "fuse", step: step.id, sure: desc.exact,
+          out.push({ kind: "fuse", step: step.id, sure: desc.exact, label: data.ab(a).name + " partner",
             text: (desc.exact ? "Has " + data.ab(a).name : "Can have " + data.ab(a).name + (hidden ? " (hidden ability; check after catching)" : " (check which ability it has)")) +
               ": partner for " + step.title.replace(" (keep fused)", "") + " → " + adv.typeNames(fz) + "." });
         });
@@ -328,10 +328,10 @@
     var haveTailwind = extras.some(function (m) { return m.ability === A("PRANKSTER") && m.moves.indexOf(M("TAILWIND")) !== -1; });
     var haveBreaker = extras.some(function (m) { return data.aIn("moldBreaker", m.ability); });
     if (!haveTailwind && desc.abilities.indexOf(A("PRANKSTER")) !== -1 && data.canRelearn(desc.id, desc.form, M("TAILWIND"))) {
-      out.push({ kind: "free", sure: desc.exact, text: (desc.exact ? "Prankster" : "Can have Prankster") + " and learns Tailwind: the free-slot answer to a fast Eternatus." });
+      out.push({ kind: "free", sure: desc.exact, label: "Prankster Tailwind", text: (desc.exact ? "Prankster" : "Can have Prankster") + " and learns Tailwind: the free-slot answer to a fast Eternatus." });
     }
     if (!haveBreaker && desc.abilities.some(function (a) { return data.aIn("moldBreaker", a); })) {
-      out.push({ kind: "free", sure: desc.exact, text: (desc.exact ? "Has " : "Can have ") + names(desc.abilities.filter(function (a) { return data.aIn("moldBreaker", a); }), data.ab) + ": body for the Mold Breaker + Gastro Acid free slot." });
+      out.push({ kind: "free", sure: desc.exact, label: "Mold Breaker body", text: (desc.exact ? "Has " : "Can have ") + names(desc.abilities.filter(function (a) { return data.aIn("moldBreaker", a); }), data.ab) + ": body for the Mold Breaker + Gastro Acid free slot." });
     }
     return out;
   }
@@ -354,34 +354,37 @@
   /**
    * Everything worth saying about one wild Pokémon on the current wave.
    * phase: "carry" or "run". Uses exact ability and moves only when ctx.peek is on.
+   * Each alert is { sev, text, advice, label, want }: `text` is the fact, `advice` what to do about it (teaching, shown
+   * once on the foe card), `label` a few words for the verdict line.
    */
   function scanEnemy(enemy, ctx, phase) {
     var exact = !!ctx.peek;
     var desc = describe(enemy, exact);
     var alerts = [];
-    if (!desc) return { desc: null, alerts: [{ sev: "info", text: "Unknown species #" + enemy.species + " (newer than this page's game data).", want: false }], wanted: false, steal: false, gas: "no", candy: null };
-    function add(sev, text, want) { alerts.push({ sev: sev, text: text, want: !!want }); }
+    if (!desc) return { desc: null, alerts: [{ sev: "info", text: "Unknown species #" + enemy.species + " (newer than this page's game data).", advice: "", label: "unknown species", want: false }], wanted: false, steal: false, gas: "no", candy: null };
+    function add(sev, text, want, label, advice) { alerts.push({ sev: sev, text: text, advice: advice || "", label: label || text, want: !!want }); }
 
-    if (enemy.shiny) add("shiny", "Shiny" + (enemy.variant ? " (tier " + (enemy.variant + 1) + ")" : "") + ". Master Ball it, or use the safe-capture steps.", true);
+    var tier = enemy.shiny && enemy.variant ? " (tier " + (enemy.variant + 1) + ")" : "";
+    if (enemy.shiny) add("shiny", "Shiny" + tier + ".", true, "shiny" + tier, "Master Ball it, or use the safe-capture steps.");
     if (ctx.system && data.sp(enemy.species)) {
       var caught = ctx.system.caught.indexOf(enemy.species) !== -1;
-      if (!caught) add("want", data.sp(enemy.species).n + " is not in your dex yet.", true);
-      else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex. Catch it.", true);
-      else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true);
+      if (!caught) add("want", data.sp(enemy.species).n + " is not in your dex yet.", true, "not in your dex");
+      else if (dexNews(enemy, ctx.system)) add("want", "This " + data.sp(enemy.species).n + " has something new for your dex.", true, "new for your dex");
+      else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true, "shiny you do not own");
     }
     // candy: state for the card (fully unlocked, or candies toward the next unlock); the order between two catches uses it
     var candy = candyNeed(enemy, ctx.system);
     var matches = scout(enemy, ctx, exact);
     matches.forEach(function (m) {
       if (m.weak) return;
-      add(m.sure ? "want" : "maybe", m.text, m.sure || m.kind === "carbos" || !!m.rare);
+      add(m.sure ? "want" : "maybe", m.text, m.sure || m.kind === "carbos" || !!m.rare, m.label);
     });
     var forcedWave = ctx.session ? adv.waveInfo(ctx.session.wave).forced : false;
     wantedItems(enemy, ctx).forEach(function (it) {
-      add("item", "Holds " + it.count + " × " + it.name + ", which you are still short of. " +
-        (forcedWave ? "Mini Black Hole takes one item a turn while you fight; Thief works too." : "Thief or Mini Black Hole it, or catch it."), phase === "run" && !forcedWave);
+      add("item", "Holds " + it.count + " × " + it.name + ", which you are still short of.", phase === "run" && !forcedWave, it.count + " × " + it.name,
+        forcedWave ? "Mini Black Hole takes one item a turn while you fight; Thief works too." : "Thief or Mini Black Hole it, or catch it.");
     });
-    if (phase === "run") freeSlotMatches(desc, ctx).forEach(function (m) { add(m.sure ? "want" : "maybe", m.text, m.sure); });
+    if (phase === "run") freeSlotMatches(desc, ctx).forEach(function (m) { add(m.sure ? "want" : "maybe", m.text, m.sure, m.label); });
 
     // Neutralizing Gas: the one thing that changes how you leave
     var gas = "no";
@@ -424,14 +427,19 @@
     var runnerOut = runnerIdx !== -1 && runnerIdx < fieldSlots && runner.hp > 0;
     var runAway = !!runner && runner.passiveOn && runner.passive === A("RUN_AWAY") || (!!runner && runner.ability === A("RUN_AWAY"));
     var notes = [];
+    // the lure chain is guaranteed while running, as long as Gouot ends every battle on the field (BattleScene.getDoubleBattleChance)
+    var warnings = [], staller = ctx.assign.byRole.staller;
+    if (staller && s.party.indexOf(staller) !== 0) warnings.push({ title: staller.name + " is not in slot 1", text: "The double-battle roll uses whoever is on the field when the battle ends. Keep " + staller.name + " first so every wave, forced bosses included, rolls with its two lures." });
+    // memberLures already returns nothing for a fainted Pokémon, so the faint itself is the warning
+    adv.lureStatus(s).field.forEach(function (f) { if (f.fainted) warnings.push({ title: f.member.name + " is fainted", text: "A fainted Pokémon's lures do not count. Revive it before the battle ends." }); });
     if (info.forced) {
-      return { action: "boss", title: adv.kindLabel(info.kind), info: info, scans: scans, notes: ["No fleeing and no catching on this wave. Gouot must be on the field when it ends."], reasons: [], catches: [], steals: [] };
+      return { action: "boss", title: adv.kindLabel(info.kind), info: info, scans: scans, notes: ["No fleeing and no catching on this wave. Gouot must be on the field when it ends."], reasons: [], catches: [], steals: [], warnings: warnings };
     }
     var catches = [], steals = [];
     var order = catchOrder(s.enemies, scans);
     order.forEach(function (i) {
       scans[i].alerts.forEach(function (a) {
-        if (a.want) (a.sev === "item" ? steals : catches).push({ who: s.enemies[i].name, text: a.text, sev: a.sev });
+        if (a.want) (a.sev === "item" ? steals : catches).push({ who: s.enemies[i].name, text: a.text, label: a.label, sev: a.sev });
       });
     });
     var first = order.length > 1 && scans[order[0]].wanted && scans[order[1]].wanted ? firstCatch(s.enemies, scans, order) : "";
@@ -448,7 +456,7 @@
     if (gasYes) notes.unshift("Neutralizing Gas is out: your lures and Run Away are off. " + (action === "stay" ? "Gastro Acid that Pokémon before anything else." : "Teddiurk uses Gastro Acid on it, then runs next turn."));
     else if (gasMaybe) notes.unshift("One of these can have Neutralizing Gas. If the game announces it" + (busy ? ", Gastro Acid that Pokémon first." : ": Gastro Acid, then run."));
     var title = { stay: "Stay", steal: "Steal, then run", gastro: "Gastro Acid, then run", run: "Run" }[action];
-    return { action: action, title: title, info: info, scans: scans, reasons: catches.concat(steals), catches: catches, steals: steals, notes: notes };
+    return { action: action, title: title, info: info, scans: scans, reasons: catches.concat(steals), catches: catches, steals: steals, notes: notes, warnings: warnings };
   }
 
   NZ.advisor.describe = describe;

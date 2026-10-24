@@ -48,11 +48,11 @@
     var items = itemList(enemy.items);
     var alerts = scan.alerts.map(function (a) {
       var p = ALERT_PILL[a.sev] || ALERT_PILL.info;
-      return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + "</span></li>";
+      return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + (a.advice ? " " + H.teach(h(a.advice), "", "span") : "") + "</span></li>";
     }).join("");
     return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
       (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") + candyRow(scan.candy, enemy) +
-      (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing here for the build.</div>') +
+      (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing for the build.</div>') +
       '<div><button type="button" class="btn link" data-act="scout" data-id="' + enemy.species + '" data-form="' + enemy.form + '">Species details</button></div></div>';
   }
 
@@ -67,7 +67,7 @@
     var labels = "";
     for (var l = 0; l <= 5; l++) labels += "<span>" + util.fmt(l === 0 ? start : start + l * 10 - 1) + "</span>";
     return '<div class="ruler" role="img" aria-label="Position in the 50-wave cycle: wave ' + wave + " of " + start + " to " + (start + 49) + '"><div class="ruler-cells">' + cells +
-      '</div><div class="ruler-labels">' + labels + '</div><div class="legend"><span><i class="now"></i>you</span><span><i class="x0"></i>X0 boss wave</span><span><i class="forced"></i>forced boss (no flee, no catch)</span></div></div>';
+      '</div><div class="ruler-labels">' + labels + '</div><div class="legend"><span><i class="now"></i>current wave</span><span><i class="x0"></i>X0 boss wave</span><span><i class="forced"></i>forced boss (no flee, no catch)</span></div></div>';
   }
 
   function odds(p) { return p >= 1 ? "guaranteed" : p <= 0 ? "never" : p === 0.5 ? "1 in 2" : "1 in " + Math.round(1 / p); }
@@ -88,20 +88,19 @@
       body += '<div class="slots">' + slots + "</div>" +
         '<dl class="kv"><dt>Lure sources</dt><dd class="num">' + ls.count + " (" + ls.sources.length + " on the field, " + ls.items.length + " item" + (ls.items.length === 1 ? "" : "s") + ")</dd><dt>Bag</dt><dd>" + itemTxt +
         "</dd><dt>Wave " + util.fmt(next) + "</dt><dd>" + nextText + "</dd><dt>At this count</dt><dd>normal waves " + odds(ls.normalChance) + ", X0 waves " + odds(ls.x0Chance) + "</dd></dl>";
-      var staller = ctx.assign.byRole.staller;
-      if (phase === "run" && staller && ctx.session.party.indexOf(staller) !== 0) body += H.callout("warn", staller.name + " is not in slot 1", "The lure roll uses the Pokémon on the field when the battle ends. Keep " + h(staller.name) + " first so it is out after every wave, forced bosses included.");
-      if (ls.field.some(function (f) { return f.fainted && f.lures.length === 0; }) || ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
+      if (ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
     } else {
       body += H.teach("Each lure source on the field when a battle ends divides the odds by 4: a lure ability, a lure passive, or a lure item tier in the bag. The roll uses slot 1, plus slot 2 after a double.", "note") +
         '<div class="table-wrap"><table><thead><tr><th>Sources</th><th>Normal wave</th><th>X0 wave</th></tr></thead><tbody>' +
         [0, 1, 2, 3].map(function (n) { return '<tr><th class="num">' + n + "</th><td>" + odds(adv.doubleChance(1, n)) + "</td><td>" + odds(adv.doubleChance(10, n)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
     }
+    // the Running tab has no lure panel: once both fusions are out every wave is a double, and the verdict warns when Gouot is not in slot 1
     if (phase === "carry") {
-      body += '<ul class="bullets teach"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
+      body += '<ul class="bullets teach"><li><strong>Regigigas in slot 1,</strong> Pumpkaboo or Gourgeist in slot 2 for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
     } else {
-      body += '<ul class="bullets teach"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed, ever. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
+      body += '<ul class="bullets teach"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
     }
-    return H.panel("Doubles chain", body, "who is out when the battle ends");
+    return H.panel("Doubles chain", body);
   }
 
   function scoutCard(id, formIndex, ctx, phase) {
@@ -128,21 +127,21 @@
     }).join("") + "</ul>" : '<p class="sub">Nothing on your open splice steps needs this species.</p>';
     var boss = adv.bossNotes(adv.describe({ species: id, form: formIndex, passiveOn: true, boss: true }, false), {});
     var threat = boss.notes.filter(function (n) { return n.sev === "danger" || n.sev === "care"; }).slice(0, 4).map(function (n) {
-      return '<li class="alert">' + H.pill(n.sev === "danger" ? "danger" : "care", n.sev === "danger" ? "bad" : "todo") + "<span><strong>" + h(n.title) + ".</strong> " + h(n.text) + "</span></li>";
+      return '<li class="alert">' + H.pill(n.sev === "danger" ? "danger" : "warning", n.sev === "danger" ? "bad" : "todo") + "<span><strong>" + h(n.title) + ".</strong> " + h(n.text) + "</span></li>";
     }).join("");
     return '<div class="foe"><div class="foe-top"><span class="foe-name">' + h(data.name(id, formIndex)) + "</span>" + H.typeChips(f.types) + dex + (sp.c ? '<span class="sub num">starter · ' + sp.c + " pts</span>" : "") + "</div>" + forms +
       '<dl class="kv"><dt>Abilities</dt><dd>' + abilities.join(", ") + "</dd><dt>Passive</dt><dd>" + H.ab(data.passive(id, formIndex)) + " " + H.teach("(bosses and unlocked starters only)", "sub", "span") + '</dd><dt>Base Speed</dt><dd class="num">' + f.stats[5] + "</dd></dl>" +
-      '<h3 class="h">For your build</h3>' + list +
-      (threat ? H.details("scout-threat", "If you had to fight it as a boss", '<ul class="alerts">' + threat + "</ul>") : "") +
+      '<h3 class="h">Use in the build</h3>' + list +
+      (threat ? H.details("scout-threat", "As a boss", '<ul class="alerts">' + threat + "</ul>") : "") +
       H.details("scout-moves", "Level-up moves (" + lm.length + ")", '<div class="chips">' + moveChips + "</div>" + H.teach("Wild Pokémon only know level-up moves. A fused Pokémon can relearn any of these with a Memory Mushroom.", "sub")) + "</div>";
   }
 
-  function scoutPanel(ctx, phase) {
-    var st = ui.state;
-    var card = st.scout ? scoutCard(st.scout, st.scoutForm || 0, ctx, phase) : H.teach("Type a wild Pokémon's name to see what it offers: moves for an open splice step, a Sturdy or lure ability, or a free-slot role.", "sub");
-    return H.panel("Scout a Pokémon", '<label class="field" for="scout-q">Species<input type="search" id="scout-q" data-live="scout" autocomplete="off" placeholder="Throh, Golurk, Garganacl…"></label><div id="scout-hits" class="chips"></div><div id="scout-card">' + card + "</div>",
-      "from game data, no sync needed", ' id="scout-panel"');
-  }
+  /** Body of the Pokédex popover: a search box, its hits, and the card for the chosen species. */
+  ui.dexView = function (ctx) {
+    var st = ui.state, phase = st.tab === "run" ? "run" : "carry";
+    var card = st.scout ? scoutCard(st.scout, st.scoutForm || 0, ctx, phase) : H.teach("Type a species name, or click any Pokémon on the page. The card says what it offers: moves for an open splice step, a Sturdy or lure ability, or a free-slot role. From game data, no sync needed.", "sub");
+    return '<div class="dex-b"><label class="field" for="scout-q">Species<input type="search" id="scout-q" data-live="scout" autocomplete="off" placeholder="Throh, Golurk, Garganacl…"></label><div id="scout-hits" class="chips"></div><div id="scout-card">' + card + "</div></div>";
+  };
 
   ui.live("scout", function (input) {
     var box = document.getElementById("scout-hits");
@@ -153,11 +152,10 @@
   ui.on("scout", function (t) {
     ui.state.scout = Number(t.getAttribute("data-id")) || 0;
     ui.state.scoutForm = Number(t.getAttribute("data-form")) || 0;
-    if (ui.state.tab !== "carry" && ui.state.tab !== "run") ui.state.tab = "carry";
-    ui.persist(); ui.render();
-    var p = document.getElementById("scout-panel");
-    if (p && p.scrollIntoView) p.scrollIntoView({ block: "nearest" });
+    ui.openDex(false);
+    var d = document.getElementById("dex");
+    if (d) d.scrollTop = 0;
   });
 
-  ui.field = { waveLine: waveLine, foeCard: foeCard, ruler: ruler, lurePanel: lurePanel, scoutPanel: scoutPanel, itemList: itemList, odds: odds };
+  ui.field = { waveLine: waveLine, foeCard: foeCard, ruler: ruler, lurePanel: lurePanel, itemList: itemList, odds: odds };
 })();

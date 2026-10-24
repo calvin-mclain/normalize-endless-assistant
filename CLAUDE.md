@@ -21,8 +21,13 @@ assistant tab (`window.opener.postMessage`, game origin checked on receipt). Kee
   is tagged `teach` (`H.teach(...)` or the class) and hidden in Compact; state (verdicts, ticks, counts, what is
   missing) is never tagged. Reference panels (rules, background) pass `ref` to `H.panel` and fold in Compact.
   Tag new prose accordingly, and state each rule in one place.
-- `data/game-data.json` — compact data extracted from PokéRogue `main` 1.12.0.11. `build/build_data.py` made
-  it from a raw extraction that is not in this repo.
+- `data/game-data.json` — compact data extracted from the PokéRogue source (`main`). Refresh it with
+  `node build/update_data.mjs` (or `npm run data`): one command that fetches a sparse checkout of the game and its
+  English locale into the OS temp dir, parses the data files, writes the JSON and prints a short summary of what
+  changed (version, counts, changed species, moves, abilities, sets, egg moves, events). Read that summary instead
+  of the file; `--check` compares without writing, `--verbose` lists everything. Then rebuild, run the tests and
+  commit `data/game-data.json` with `index.html`. The `events` key holds the game's timed events; the page shows
+  the active one (`data.activeEvents`).
 - `build/make_samples.mjs` — the sample saves the page offers.
 
 ## Strategy facts the player has corrected (do not regress)
@@ -37,6 +42,13 @@ assistant tab (`window.opener.postMessage`, game origin checked on receipt). Kee
 - Lucky Eggs and Golden Eggs are never in the shop. They only come off wild Pokémon (Thief, Mini Black Hole,
   or a catch).
 - Vitamins cannot be stolen. Carbos come through fuse-and-dump instead.
+- While running, the goal is Speed (400,000 on Gouot and Jynxgigas by wave 5850, `kb.SPEED_TARGET`). Eggs exist
+  only for that: once a holder is there its egg targets count as met (`advisor.speedGoal`, `itemAudit`). A catch
+  pays EXP like a win (`AttemptCapturePhase` queues `VictoryPhase`); fleeing pays none. A party member that did not
+  fight earns nothing without EXP Share: each share gives 20 % of the EXP divided by the number of fighters
+  (`BattleScene.applyPartyExp`), so five shares in a double battle give benched Jynxgigas half of every catch.
+- The Running tab has no Doubles chain panel: both fusions guarantee every wave. The verdict warns when Gouot is not
+  in slot 1 or a lure holder is fainted.
 - Wrong Pokémon led a wave: switch to one of the two extra Pokémon and let it faint. The replacement after
   a faint comes in without taking a hit.
 - "Worth catching" mirrors the game's grey Poké Ball (`EnemyBattleInfo`): a missing shiny, variant, gender
@@ -51,7 +63,7 @@ localStorage keys `data_<user>` and `sessionData<slot>_<user>`.
 ## Shipping
 
 No pull requests. Work on a branch, then merge it into `main` locally with a fast-forward only (`git merge --ff-only`)
-and push `main`. If `main` has moved, rebase the branch onto it first so the merge stays a fast-forward.
+and push `main`. If `main` has moved, merge `main` into the branch (or rebase onto it) first so the update of `main` stays a fast-forward.
 
 ## Tests
 

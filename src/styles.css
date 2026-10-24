@@ -1,6 +1,6 @@
 /* Layout: a sticky phase bar over one working column; panels pair up side by side on wide screens.
    Palette: Ghost violet for the interface, Normal khaki as the second voice (the build is Normal moves versus Ghost types).
-   Type: a pixel display face for names and wave numbers, a high-legibility sans for everything you read mid-battle. */
+   Type: one high-legibility sans throughout; headings and wave numbers differ by weight and size only. */
 :root {
   --bg: #efedf5;
   --surface: #faf9fd;
@@ -28,7 +28,7 @@
   --candy: #a1366d;
   --candy-soft: #fbe3ef;
   --shadow: 0 1px 0 rgba(31, 26, 46, 0.06), 0 6px 18px -12px rgba(31, 26, 46, 0.35);
-  --font-display: "Pixelify Sans", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-body);
   --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --r: 4px;
@@ -188,6 +188,27 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .dot.stale { background: var(--warn); }
 .dot.sample { background: var(--info); }
 
+/* ---------- Pokédex popover: fixed under the bar, right-aligned; pinned it stays while you click around ---------- */
+.dex-btn {
+  padding: 7px 12px; border: 2px solid var(--line); border-radius: var(--r); background: var(--raised); cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap;
+}
+.dex-btn:hover { color: var(--ink); }
+.dex-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.dex {
+  position: fixed; right: 16px; z-index: 30;
+  width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 140px);
+  overflow: auto; overscroll-behavior: contain;
+  background: var(--raised); border: 2px solid var(--accent); border-radius: var(--r); box-shadow: var(--shadow);
+  display: grid; gap: 10px; padding: 10px 14px 14px;
+}
+.dex[hidden] { display: none; }
+.dex-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dex-h h2 { font-family: var(--font-display); font-weight: 600; font-size: 17px; }
+.dex-h .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.dex-b { display: grid; gap: 10px; min-width: 0; }
+.dex .foe { border-color: var(--line); }
+
 /* ---------- page ---------- */
 .shell { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 72px; display: grid; gap: var(--gap); }
 .view-head { display: grid; gap: 4px; }
@@ -202,7 +223,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
 .panel-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 12px 14px 0; }
 .panel-h h2 { font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.25; }
-.panel-h .meta { font-size: 13px; color: var(--ink-3); }
+
 .panel-b { padding: 10px 14px 14px; display: grid; gap: 12px; min-width: 0; }
 .panel.flat { background: transparent; border-style: dashed; }
 .sub { font-size: 13px; color: var(--ink-3); }
@@ -418,6 +439,8 @@ tbody th { font-weight: 700; }
 .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .slot { border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; background: var(--raised); display: grid; gap: 3px; min-width: 0; }
 .slot.off { opacity: 0.6; border-style: dashed; }
+.slot.done { border-color: var(--go); }
+.slot.done .big-odds { color: var(--go); }
 .slot-n { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
 .big-odds { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.1; }
 .big-odds .unit { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--ink-3); }
@@ -467,6 +490,8 @@ textarea.paste { width: 100%; min-height: 64px; resize: vertical; font-family: v
   .bar-in { justify-content: space-between; }
   .bar-right { margin-left: 0; flex: 1 1 auto; justify-content: space-between; }
   .density-btn { padding: 6px 8px; font-size: 12.5px; }
+  .dex-btn { padding: 6px 8px; font-size: 12.5px; }
+  .dex { right: 8px; width: calc(100vw - 16px); max-height: calc(100vh - 170px); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .toast { animation: rise 0.18s ease-out; }

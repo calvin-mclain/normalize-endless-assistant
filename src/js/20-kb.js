@@ -47,7 +47,7 @@ NZ.kb = (function () {
     },
     staller: {
       passiveSet: "lure", passiveWhy: "A lure passive plus a lure ability later is what makes every wave a double.",
-      form: 0, formWhy: "Only Average Size has Illuminate.",
+      form: 0, formWhy: "Only the Medium Variety (the game called it Average Size until 1.12.2) has Illuminate.",
       ability: ["PICKUP", "FRISK"], abilityOptional: true, abilityWhy: "Pickup for early items; Frisk shows wild abilities without catching.",
       speedNature: true, natureWhy: "Jolly or Timid: this is one of the two speed-invested Pokémon.",
       levelMoves: ["TRICK_OR_TREAT"], levelWhy: "Trick-or-Treat is why this build needs the Pumpkaboo line.",
@@ -126,6 +126,7 @@ NZ.kb = (function () {
     GRIP_CLAW: { name: "Grip Claw", why: "10 % per claw per hit, attacking moves only. Useful on whoever attacks; does nothing on Jynxgigas." },
     REVIVER_SEED: { name: "Reviver Seed", why: "One safe turn to Gastro Acid a Paradox Pokémon or Eternatus." },
     MYSTICAL_ROCK: { name: "Mystical Rock", why: "Psychic Terrain lasts two turns longer." },
+    EXP_SHARE: { name: "EXP Share", why: "A Pokémon that sat out the battle earns nothing without one. Each share gives it 20 % of the EXP, split between the fighters: five shares in a double battle hand Jynxgigas half of every catch." },
     TERA_ORB: { name: "Tera Orb", why: "Needed to Terastallize; Tera Shards appear once you hold it." },
     LOCK_CAPSULE: { name: "Lock Capsule", why: "Lock rarities while rerolling for balls." },
     SHINY_CHARM: { name: "Shiny Charm", why: "Four charms make wild shinies 1 in 32." },
@@ -137,6 +138,7 @@ NZ.kb = (function () {
   var bagTargets = [
     { key: "TERA_ORB", target: 1, note: "plus Ghost Tera Shards for Jynxgigas and Teddiurk" },
     { key: "LOCK_CAPSULE", target: 1 },
+    { key: "EXP_SHARE", target: 5, note: "levels Jynxgigas from the bench" },
     { key: "SHINY_CHARM", target: 4 },
     { key: "AMULET_COIN", target: 5, soft: true }
   ];
@@ -156,7 +158,7 @@ NZ.kb = (function () {
       how: "So Teddiurk can answer Neutralizing Gas without switching. Core Enforcer (Zygarde) also works." },
     { id: "s7", kind: "learn", who: "killer", moves: ["LEECH_SEED"], title: "Leech Seed", how: "The heal that re-arms Sturdy every turn." },
     { id: "s8", kind: "learn", who: "killer", moves: ["SOAK"], title: "Soak", how: "Makes the boss pure Water: Salt Cure doubles and Grass-types can be seeded." },
-    { id: "s9", kind: "learn", who: "killer", moves: ["HEAL_BLOCK"], title: "Heal Block", how: "Yamask no longer learns it by level, so it needs its own splice." },
+    { id: "s9", kind: "learn", who: "killer", moves: ["HEAL_BLOCK"], title: "Heal Block" },
     { id: "s10", kind: "fuse", who: "killer", need: "sturdy", title: "Sturdy fusion (keep fused)",
       how: "Yamask first, so it keeps Purifying Salt and gains Sturdy. The partner's typing must leave the fusion Rock, Ground or Steel for sandstorm immunity." },
     { id: "s11", kind: "learn", who: "partner", moves: ["GASTRO_ACID"], title: "Gastro Acid on the partner", how: "For problem abilities during boss fights." },
@@ -290,8 +292,9 @@ NZ.kb = (function () {
   ];
 
   var speedNotes = [
-    "Only Gouot and Jynxgigas need levels, and only for Speed: about 400,000 Speed by wave 5850, roughly level 25,000.",
-    "Speed comes from a +Speed nature, 10 Soul Dew, 31 Carbos and levels. Levels come from Lucky and Golden Eggs on the EXP you earn from catches. Fleeing earns none.",
+    "Only Gouot and Jynxgigas need levels, and only for Speed: about 400,000 Speed by wave 5850, roughly level 25,000. Once both are there, eggs and EXP have done their job.",
+    "Speed comes from a +Speed nature, 10 Soul Dew, 31 Carbos and levels. Levels come from catches (a catch pays EXP like a win; fleeing pays none), multiplied by Lucky and Golden Eggs.",
+    "Jynxgigas sits out every normal wave, so it earns EXP only through EXP Shares in the bag: each share gives 20 % of a catch split between the two fighters, so five shares give it half.",
     "Rare Candies and Candy Jars are wasted picks for this build.",
     "Reference from Grex's wave 1152 run: Gouot level 2,300 with 42,900 Speed, the partner level 3,100 with 50,300 Speed, runner and boss killer level 1,900."
   ];
@@ -318,6 +321,6 @@ NZ.kb = (function () {
     steps: steps, bossNotes: bossNotes, eternatusCases: eternatusCases, standardLine: standardLine, safeCapture: safeCapture,
     troubleshooting: troubleshooting, variants: variants, speedNotes: speedNotes, shopRules: shopRules, sources: sources,
     sturdyLine: sturdyLine, catching: catching, freeSlots: freeSlots,
-    STARTER_POINTS: 15, FINAL_WAVE: 5850
+    STARTER_POINTS: 15, FINAL_WAVE: 5850, SPEED_TARGET: 400000
   };
 })();
