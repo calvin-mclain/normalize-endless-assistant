@@ -22,8 +22,7 @@
       ? H.callout("warn", b.total + " of 15 points: " + b.over + " over", "Fully reduced, this team costs " + b.floor + ". " + H.teach("Buy candy cost reductions until the six fit. Each reduction takes 1 point off a starter that costs more than 1, then halves it.", "", "span"))
       : H.callout("good", b.total + " of 15 points", b.total < 15 ? (15 - b.total) + " to spare." : "Exactly on the limit.");
     return H.panel("Starter points", '<div class="meter"><div class="meter-top"><span>15 starter points in Endless</span><strong class="num">' + b.total + " / 15</strong></div>" + bar + "</div>" + verdict +
-      '<ul class="budget">' + rows + "</ul>",
-      ctx.system ? "reductions read from your save" : "set your reductions by hand, or sync");
+      '<ul class="budget">' + rows + "</ul>");
   }
 
   function checkRow(role, c) {
@@ -73,14 +72,14 @@
         '<div class="chips">' + moves + '</div><div class="chips">' + items + "</div>" + H.teach(h(t.why), "note") + "</div>";
     }).join("");
     return H.panel("Final team", H.teach("Four fusions; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.", "note") +
-      '<div class="team">' + rows + "</div>", "four fusions", "", true);
+      '<div class="team">' + rows + "</div>", "", true);
   }
 
   function variantsPanel() {
     var body = kb.variants.map(function (v) {
       return '<div><div class="check-label">' + h(v.name) + '</div><div class="note">' + h(v.change) + " " + h(v.trade) + "</div></div>";
     }).join("");
-    return H.panel("Variants", body, "if you are missing an unlock", "", true);
+    return H.panel("Variants", body, "", true);
   }
 
   ui.views.party = function (ctx) {

@@ -120,13 +120,13 @@ NZ.ui = (function () {
     return "<" + tag + ' class="teach' + (cls ? " " + cls : "") + '">' + html + "</" + tag + ">";
   }
   /** A panel. `ref` marks reference material (rules, background): in Compact its body folds behind a "Show" toggle. */
-  function panel(title, body, meta, attrs, ref) {
+  function panel(title, body, attrs, ref) {
     var cls = "panel" + (ref ? " ref" : "");
     if (ref && compact()) {
       var id = "ref-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       body = details(id, "Show", body);
     }
-    return '<section class="' + cls + '"' + (attrs || "") + '><div class="panel-h"><h2>' + h(title) + "</h2>" + (meta ? '<span class="meta">' + meta + "</span>" : "") + '</div><div class="panel-b">' + body + "</div></section>";
+    return '<section class="' + cls + '"' + (attrs || "") + '><div class="panel-h"><h2>' + h(title) + '</h2></div><div class="panel-b">' + body + "</div></section>";
   }
   function callout(kind, title, text) {
     return '<div class="callout ' + kind + '">' + (title ? '<div class="t">' + h(title) + "</div>" : "") + (text ? "<div>" + text + "</div>" : "") + "</div>";
@@ -220,7 +220,7 @@ NZ.ui = (function () {
     bar.innerHTML = renderBar(ctx);
     var fn = views[state.tab] || views.party;
     var banner = "";
-    if (game.sample) banner = '<div class="banner sample"><span><strong>Sample save loaded.</strong> These Pokémon and numbers are an example, not your run.</span><button type="button" class="btn small" data-act="clear-sample">Remove sample</button></div>';
+    if (game.sample) banner = '<div class="banner sample"><span><strong>Sample save loaded.</strong></span><button type="button" class="btn small" data-act="clear-sample">Remove sample</button></div>';
     view.innerHTML = banner + fn(ctx) + footer();
     renderDex(ctx, bar, dex);
     if (keep) {

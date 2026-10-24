@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   var ui = NZ.ui, util = NZ.util, data = NZ.data, kb = NZ.kb, adv = NZ.advisor, h = util.esc, H = ui.html, F = ui.field;
-  var SEV_PILL = { danger: ["danger", "bad"], care: ["care", "todo"], info: ["note", "info"], good: ["good", "ok"] };
+  var SEV_PILL = { danger: ["danger", "bad"], care: ["warning", "todo"], info: ["note", "info"], good: ["good", "ok"] };
   var REASON_PILL = { shiny: ["shiny", "shiny"], item: ["item", "todo"], maybe: ["check", "info"], want: ["catch", "ok"] };
 
   function currentWave(ctx) { return ctx.session ? ctx.session.wave : Math.max(1, Math.floor(ui.state.run.wave || 1)); }
@@ -33,7 +33,7 @@
         steal: "Nothing to catch, but there are items you are short of. Thief takes the best item first (30 % a hit, three hits with two Multi Lens); then Teddiurk runs.",
         gastro: v.steals.length ? "There are items to take once the gas is off." : "" }[v.action] || "";
       return H.panel("This wave", F.waveLine(s) + '<div class="verdict ' + cls + '"><div class="verdict-call">' + h(call) + "</div>" + (sub ? H.teach(h(sub), "", "div") : "") + reasons +
-        (notes ? '<ul class="bullets">' + notes + "</ul>" : "") + "</div>" + warnings + '<div class="foes">' + foes + "</div>", "synced " + h(util.ago(ui.game.at)));
+        (notes ? '<ul class="bullets">' + notes + "</ul>" : "") + "</div>" + warnings + '<div class="foes">' + foes + "</div>");
     }
     var r = ui.state.run, info = adv.waveInfo(r.wave);
     var action = info.forced ? "boss" : r.want ? "stay" : r.gas ? "gastro" : "run";
@@ -48,7 +48,7 @@
       '<div class="row"><label class="switch"><input type="checkbox" id="run-gas" data-bind="run.gas"' + (r.gas ? " checked" : "") + '><span>Neutralizing Gas was announced</span></label>' +
       '<label class="switch"><input type="checkbox" id="run-want" data-bind="run.want"' + (r.want ? " checked" : "") + "><span>A shiny or a wanted Pokémon is out</span></label></div>" +
       '<div class="verdict ' + action + '"><div class="verdict-call">' + h(call) + "</div>" + H.teach(h(sub), "", "div") + "</div>" +
-      '<p class="sub">' + H.teach("Three checks a wave, then flee. With a synced save the checks are made from the save. ", "", "span") + '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="shiny">try a sample wave</button>.</p>', "manual");
+      '<p class="sub">' + H.teach("Three checks a wave, then flee. With a synced save the checks are made from the save. ", "", "span") + '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="shiny">try a sample wave</button>.</p>');
   }
 
   function positionPanel(ctx) {
@@ -56,7 +56,7 @@
     var left = kb.FINAL_WAVE - w;
     return H.panel("Position", F.ruler(w) + '<dl class="kv"><dt>Next forced boss</dt><dd>Wave ' + util.fmt(info.nextForced) + " · " + h(adv.kindLabel(info.nextForcedKind)) + (info.toForced ? " · in " + info.toForced + " waves" : " · now") +
       "</dd><dt>Next X0 wave</dt><dd>Wave " + util.fmt(info.nextX0) + (info.nextX0 === w ? " · now" : "") + "</dd><dt>End of Endless</dt><dd>Wave " + util.fmt(kb.FINAL_WAVE) + (left > 0 ? " · " + util.fmt(left) + " to go" : "") + "</dd></dl>" +
-      H.teach("Every 50 waves: a Paradox Pokémon. Every 250: Eternatus. Every 1000: Eternamax Eternatus. X0 waves hold wild bosses you can still flee.", "sub"), "the 50-wave cycle");
+      H.teach("Every 50 waves: a Paradox Pokémon. Every 250: Eternatus. Every 1000: Eternamax Eternatus. X0 waves hold wild bosses you can still flee.", "sub"));
   }
 
   // ---- boss desk -------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@
       var d = adv.bossDossier({ species: id, form: 0 }, ctx, data.sp(id).k === "ETERNATUS" ? 250 : 50);
       var on = ui.state.run.boss === id;
       return '<button type="button" class="chip' + (on ? " have" : "") + '" data-act="boss-pick" data-id="' + id + '" aria-pressed="' + on + '">' + h(data.sp(id).n) +
-        (d.level === "danger" ? " " + H.pill("danger", "bad") : d.level === "care" ? " " + H.pill("care", "todo") : "") + "</button>";
+        (d.level === "danger" ? " " + H.pill("danger", "bad") : d.level === "care" ? " " + H.pill("warning", "todo") : "") + "</button>";
     }).join("") + "</div>";
   }
 
@@ -95,7 +95,7 @@
     var passive = d.passiveActive ? H.ab(desc.passive) + ' <span class="sub">(active: bosses keep their passive)</span>' : '<span class="sub">none on Eternatus waves</span>';
     var moves = desc.moves.slice(0, 40).map(function (m) { return H.moveChip(m); }).join("");
     var head = '<div class="foe-top"><span class="foe-name">' + h(desc.name) + "</span>" + H.typeChips(desc.types) + (desc.level ? '<span class="sub num">Lv ' + util.fmt(desc.level) + "</span>" : "") +
-      H.pill(d.level === "danger" ? "needs a different line" : d.level === "care" ? "needs care" : "standard line", d.level === "danger" ? "bad" : d.level === "care" ? "todo" : "ok") + "</div>" +
+      H.pill(d.level === "danger" ? "needs a different line" : d.level === "care" ? "standard line, with care" : "standard line", d.level === "danger" ? "bad" : d.level === "care" ? "todo" : "ok") + "</div>" +
       '<dl class="kv"><dt>Ability</dt><dd>' + abil + "</dd><dt>Passive</dt><dd>" + passive + "</dd><dt>" + (desc.exact ? "Speed" : "Base Speed") + '</dt><dd class="num">' + (desc.exact && desc.speed != null ? util.fmt(desc.speed) : desc.baseSpeed) + "</dd></dl>";
     var speed = "";
     if (d.speed) {
@@ -124,7 +124,7 @@
     var intro = '<p class="note">Next forced boss: <strong>wave ' + util.fmt(info.nextForced) + "</strong> (" + h(adv.kindLabel(info.nextForcedKind)) + ")" + (info.toForced ? ", in " + info.toForced + " waves" : ", now") + ". " + H.teach("Pick the boss to see its plan.", "", "span") + "</p>";
     var body = target && target.auto ? "" : intro + bossPicker(ctx);
     body += target ? dossierHtml(target, ctx) : H.teach("Paradox bosses are drawn from 20 species. Slither Wing is the one that breaks the standard line.", "sub");
-    return H.panel("Boss fights", body, target && target.auto ? "this wave's boss, from your save" : "20 Paradox Pokémon and Eternatus", ' id="boss-panel"');
+    return H.panel("Boss fights", body, ' id="boss-panel"');
   }
 
   // ---- catching, shop, speed, free slots -----------------------------------------------------------------------------
@@ -132,7 +132,7 @@
     return H.panel("Catching", '<ul class="bullets">' + kb.catching.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>" +
       '<h3 class="h">Safe capture</h3><ol class="numbered">' + kb.safeCapture.map(function (s) { return "<li><div><strong>" + h(s.t) + '</strong><div class="d teach">' + h(s.d) + "</div></div></li>"; }).join("") + "</ol>" +
       H.callout("warn", "X0 waves", "Both wild Pokémon may be bosses, so you cannot Roar one away and the partner's spread move can kill the shiny. Trick-or-Treat the shiny (it becomes part Ghost) and Entrainment the partner: after two turns neither can hurt it or you."),
-      "without a Master Ball", "", true);
+      "", true);
   }
 
   function shopPanel(ctx) {
@@ -145,7 +145,7 @@
     return H.panel("Shop and money", H.teach("Fleeing gives no shop and no EXP. You see a shop only after a win or a catch, or after knocking out one of two wild Pokémon and fleeing the other.", "note") + balls +
       H.teach('<h3 class="h">Take, in this order</h3><ol class="numbered">' + kb.shopRules.map(function (t) { return "<li><div>" + h(t) + "</div></li>"; }).join("") + "</ol>", "", "div") +
       '<h3 class="h">Reroll costs at wave ' + util.fmt(w) + '</h3><div class="table-wrap"><table><tbody>' + rows + "</tbody></table></div>" +
-      H.teach("Reroll cost grows in a straight line with the wave and doubles per reroll in one shop; money rewards grow much faster. From about wave 1500 one Nugget covers any shop.", "sub"), "");
+      H.teach("Reroll cost grows in a straight line with the wave and doubles per reroll in one shop; money rewards grow much faster. From about wave 1500 one Nugget covers any shop.", "sub"));
   }
 
   function speedCard(label, base, opts, actual) {
@@ -192,8 +192,7 @@
     var controls = fromSave ? "" : '<div class="row"><label class="field" for="sp-level">Level<input type="number" id="sp-level" min="1" max="200000" data-bind="speed.level" value="' + sp.level + '"></label>' +
       '<label class="field" for="sp-carbos">Carbos<input type="number" id="sp-carbos" min="0" max="31" data-bind="speed.carbos" value="' + sp.carbos + '"></label>' +
       '<label class="field" for="sp-dew">Soul Dew<input type="number" id="sp-dew" min="0" max="10" data-bind="speed.soulDew" value="' + sp.soulDew + '"></label></div>';
-    return H.panel("Speed and levels", (fromSave ? goalCallout(ctx) : "") + controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
-      fromSave ? "the goal while running, from your save" : "manual", ' id="speed-panel"');
+    return H.panel("Speed and levels", (fromSave ? goalCallout(ctx) : "") + controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>", ' id="speed-panel"');
   }
 
   function freePanel(ctx) {
@@ -214,15 +213,14 @@
     return H.panel("The two free slots", '<ul class="checks">' + rows + "</ul>" +
       H.details("free-tail", "Prankster with Tailwind (" + tail.length + ")", '<div class="chips">' + tail.map(function (r) { return H.monChip(r.id, r.form, r.slot === 2 ? "hidden ability" : ""); }).join("") + "</div>") +
       H.details("free-breaker", "Mold Breaker, Teravolt or Turboblaze (" + breakers.length + ")", '<div class="chips">' + breakers.map(function (r) { return H.monChip(r.id, r.form, r.slot === 2 ? "hidden ability" : ""); }).join("") + "</div>") +
-      H.details("free-gastro", "Gastro Acid by level-up", '<div class="chips">' + data.learners(data.M.GASTRO_ACID).map(function (l) { return H.monChip(l.id, 0, adv.lvlLabel(l.lvl), l.lvl < 0); }).join("") + "</div>"),
-      "after you start running");
+      H.details("free-gastro", "Gastro Acid by level-up", '<div class="chips">' + data.learners(data.M.GASTRO_ACID).map(function (l) { return H.monChip(l.id, 0, adv.lvlLabel(l.lvl), l.lvl < 0); }).join("") + "</div>"));
   }
 
   function troublePanel() {
     return H.panel("Troubleshooting", kb.troubleshooting.map(function (t, i) {
       var body = '<p class="note">' + h(t.intro) + "</p>" + (t.list ? '<ol class="numbered">' + t.list.map(function (x) { return "<li><div>" + h(x) + "</div></li>"; }).join("") + "</ol>" : "");
       return H.details("tr-" + i, h(t.q), body, "big");
-    }).join(""), "");
+    }).join(""));
   }
 
   ui.views.run = function (ctx) {

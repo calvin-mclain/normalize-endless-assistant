@@ -158,7 +158,7 @@ NZ.kb = (function () {
       how: "So Teddiurk can answer Neutralizing Gas without switching. Core Enforcer (Zygarde) also works." },
     { id: "s7", kind: "learn", who: "killer", moves: ["LEECH_SEED"], title: "Leech Seed", how: "The heal that re-arms Sturdy every turn." },
     { id: "s8", kind: "learn", who: "killer", moves: ["SOAK"], title: "Soak", how: "Makes the boss pure Water: Salt Cure doubles and Grass-types can be seeded." },
-    { id: "s9", kind: "learn", who: "killer", moves: ["HEAL_BLOCK"], title: "Heal Block", how: "Yamask no longer learns it by level, so it needs its own splice." },
+    { id: "s9", kind: "learn", who: "killer", moves: ["HEAL_BLOCK"], title: "Heal Block" },
     { id: "s10", kind: "fuse", who: "killer", need: "sturdy", title: "Sturdy fusion (keep fused)",
       how: "Yamask first, so it keeps Purifying Salt and gains Sturdy. The partner's typing must leave the fusion Rock, Ground or Steel for sandstorm immunity." },
     { id: "s11", kind: "learn", who: "partner", moves: ["GASTRO_ACID"], title: "Gastro Acid on the partner", how: "For problem abilities during boss fights." },

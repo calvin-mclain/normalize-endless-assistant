@@ -402,7 +402,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     await page.click("#tab-sync");
     await page.click('button[data-act="sample"][data-sample="shiny"]');
     assert.equal(await h1(page), "Running");
-    assert.match(await text(page, ".banner.sample"), /not your run/);
+    assert.match(await text(page, ".banner.sample"), /Sample save loaded/);
     assert.equal(await text(page, ".verdict-call"), "Stay");
     assert.match(await text(page, "#tab-sync"), /Sample save/);
     await page.click('[data-act="clear-sample"]');
@@ -671,7 +671,8 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.equal(await page.evaluate(() => !!NZ.ui.game.system), true, "unlocks arrived with the first message");
     await page.click("#tab-run");
     assert.equal(await text(page, ".verdict-call"), "Stay");
-    assert.match(await text(page, "#items-run .meta"), /counted from your save/, "the Running tab's Items panel counts from the synced save");
+    assert.equal(await page.locator("#items-run .stepper").count(), 0, "the Running tab's Items panel counts from the synced save, no hand steppers");
+    assert.match(await text(page, "#items-run .cnt"), /\d+ \/ \d+/);
   });
 
   await check("a new wave in the game tab shows up by itself within two seconds", async () => {

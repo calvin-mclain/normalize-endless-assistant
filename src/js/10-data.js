@@ -55,7 +55,7 @@ NZ.data = (function () {
     var s = sp(id);
     if (!s) return "Species #" + id;
     var f = s.f && s.f[formIndex || 0];
-    if (f && f[0] && f[1] && f[1] !== "Normal") return s.n + " (" + f[1] + ")";
+    if (f && f[0] && f[1] && f[1] !== "Normal" && s.n.slice(-f[1].length - 2) !== "(" + f[1] + ")") return s.n + " (" + f[1] + ")";
     return s.n;
   }
 

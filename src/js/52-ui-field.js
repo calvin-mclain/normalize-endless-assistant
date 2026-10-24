@@ -87,7 +87,7 @@
     } else {
       body += '<ul class="bullets teach"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
     }
-    return H.panel("Doubles chain", body, "lure sources on the field");
+    return H.panel("Doubles chain", body);
   }
 
   function scoutCard(id, formIndex, ctx, phase) {
@@ -114,7 +114,7 @@
     }).join("") + "</ul>" : '<p class="sub">Nothing on your open splice steps needs this species.</p>';
     var boss = adv.bossNotes(adv.describe({ species: id, form: formIndex, passiveOn: true, boss: true }, false), {});
     var threat = boss.notes.filter(function (n) { return n.sev === "danger" || n.sev === "care"; }).slice(0, 4).map(function (n) {
-      return '<li class="alert">' + H.pill(n.sev === "danger" ? "danger" : "care", n.sev === "danger" ? "bad" : "todo") + "<span><strong>" + h(n.title) + ".</strong> " + h(n.text) + "</span></li>";
+      return '<li class="alert">' + H.pill(n.sev === "danger" ? "danger" : "warning", n.sev === "danger" ? "bad" : "todo") + "<span><strong>" + h(n.title) + ".</strong> " + h(n.text) + "</span></li>";
     }).join("");
     return '<div class="foe"><div class="foe-top"><span class="foe-name">' + h(data.name(id, formIndex)) + "</span>" + H.typeChips(f.types) + dex + (sp.c ? '<span class="sub num">starter · ' + sp.c + " pts</span>" : "") + "</div>" + forms +
       '<dl class="kv"><dt>Abilities</dt><dd>' + abilities.join(", ") + "</dd><dt>Passive</dt><dd>" + H.ab(data.passive(id, formIndex)) + " " + H.teach("(bosses and unlocked starters only)", "sub", "span") + '</dd><dt>Base Speed</dt><dd class="num">' + f.stats[5] + "</dd></dl>" +

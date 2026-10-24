@@ -26,7 +26,7 @@
       body += H.callout("plain", e.n + " event, " + ui.dayLabel(e.from) + " to " + ui.dayLabel(e.to), h(ui.eventLine(e)) +
         H.teach(" The game sets these from the date (UTC). A shiny or a new form on the field still shows as worth catching the usual way.", "sub", "span"));
     });
-    return H.panel("Status", body, "");
+    return H.panel("Status", body);
   }
 
   function bridgePanel() {
@@ -38,8 +38,7 @@
       (bridge.status.manualCopy ? '<label class="field" for="copy-out">Copy this by hand<textarea id="copy-out" class="paste" readonly spellcheck="false">' + h(bridge.status.manualCopy) + '</textarea></label><div class="row"><button type="button" class="btn small" data-act="copy-hide">Hide</button></div>' : "") +
       H.teach("If dragging does not work: make any bookmark, edit it and paste the copied address as its URL. Or open the PokéRogue tab's developer console (F12) and paste the snippet there.", "sub") +
       H.details("bridge-code", "Read the script (" + bridge.snippet(bridge.pageOrigin()).length + " characters)", '<pre class="code-box" id="code-box">' + h(bridge.snippet(bridge.pageOrigin())) + "</pre>" +
-        '<ul class="bullets"><li>It calls <code>localStorage.getItem</code> on the keys that start with <code>sessionData</code> and <code>data_</code>. Nothing else is read.</li><li>It never writes to storage, never touches the game canvas and never sends key or mouse input.</li><li>In a game tab opened from this page it posts the save here when it changes. In any other tab it copies the save to your clipboard and leaves a small Copy save button in the top right corner for the next wave.</li></ul>'),
-      "run it once per game load");
+        '<ul class="bullets"><li>It calls <code>localStorage.getItem</code> on the keys that start with <code>sessionData</code> and <code>data_</code>. Nothing else is read.</li><li>It never writes to storage, never touches the game canvas and never sends key or mouse input.</li><li>In a game tab opened from this page it posts the save here when it changes. In any other tab it copies the save to your clipboard and leaves a small Copy save button in the top right corner for the next wave.</li></ul>'));
   }
 
   function livePanel() {
@@ -54,8 +53,7 @@
       H.teach("The page follows your run by itself and updates at the start of every wave, when the game writes its save.", "note") +
       '<ol class="numbered"><li><div><strong>Open the game from here.</strong><div class="d teach">The live link only works for a game tab this page opened itself.</div></div></li>' +
       '<li><div><strong>Load your run, then click the NZ bridge bookmark in that tab.</strong><div class="d teach">A small notice confirms the link. Click it again after you reload the game.</div></div></li></ol>' +
-      '<div class="row"><button type="button" class="btn primary" data-act="open-game">Open PokéRogue</button><span class="sub">' + h(ui.state.settings.gameUrl) + "</span></div>" + note,
-      "automatic, every wave");
+      '<div class="row"><button type="button" class="btn primary" data-act="open-game">Open PokéRogue</button><span class="sub">' + h(ui.state.settings.gameUrl) + "</span></div>" + note);
   }
 
   function pastePanel() {
@@ -64,13 +62,13 @@
       '<li><div><strong>Come back here and press Ctrl+V anywhere on this page.</strong><div class="d teach">Or paste into the box.</div></div></li>' +
       '<li><div><strong>On later waves, click Copy save in the game tab and paste again.</strong><div class="d teach">The button stays until you reload the game or close it with ×.</div></div></li></ol>' +
       '<label class="field" for="paste-box">Pasted save<textarea id="paste-box" class="paste" placeholder="Paste here" spellcheck="false"></textarea></label>' +
-      '<div class="row"><button type="button" class="btn" data-act="paste-go">Read the pasted save</button></div>', "one paste per check");
+      '<div class="row"><button type="button" class="btn" data-act="paste-go">Read the pasted save</button></div>');
   }
 
   function filePanel() {
     return H.panel("Export file",
       H.teach("Without the script: in the game open Menu, then Manage Data, then Export Session (your run) or Export Data (your unlocks), and drop the <code>.prsv</code> file here. An exported session is the server copy, which the game updates every five waves, so it can be a few waves behind.", "note") +
-      '<div class="drop" id="drop-zone"><strong>Drop .prsv files anywhere on this page</strong><label class="btn" for="file-pick">Choose files</label><input class="sr" type="file" id="file-pick" accept=".prsv,.json,.txt" multiple></div>', "");
+      '<div class="drop" id="drop-zone"><strong>Drop .prsv files anywhere on this page</strong><label class="btn" for="file-pick">Choose files</label><input class="sr" type="file" id="file-pick" accept=".prsv,.json,.txt" multiple></div>');
   }
 
   function settingsPanel() {
@@ -82,15 +80,15 @@
       H.teach("Live link only. A short two-note beep for shinies, Pokémon missing from your dex and pieces of the build.", "sub") +
       '<label class="switch"><input type="checkbox" id="set-sound-items" data-bind="settings.soundItems"' + (s.soundItems ? " checked" : "") + (s.sound ? "" : " disabled") + "><span>Also for items worth stealing</span></label>" +
       H.teach("Lucky and Golden Eggs get common on wild Pokémon at high waves, so this one is off by default.", "sub") +
-      '<label class="field" for="set-url">Game address<input type="text" id="set-url" data-bind="settings.gameUrl" value="' + h(s.gameUrl) + '" spellcheck="false"></label>', "");
+      '<label class="field" for="set-url">Game address<input type="text" id="set-url" data-bind="settings.gameUrl" value="' + h(s.gameUrl) + '" spellcheck="false"></label>');
   }
 
   function samplePanel() {
-    return H.panel("Sample saves", H.teach("Example saves in the game's real format, to see what a synced page looks like. They are not your run.", "note") + '<div class="chips">' +
+    return H.panel("Sample saves", H.teach("Example saves in the game's format, to see what a synced page looks like.", "note") + '<div class="chips">' +
       '<button type="button" class="chip" data-act="sample" data-sample="carry">Carry phase, wave 734</button>' +
       '<button type="button" class="chip" data-act="sample" data-sample="shiny">Running, a shiny on wave 1763</button>' +
       '<button type="button" class="chip" data-act="sample" data-sample="plain">Running, nothing on wave 1764</button>' +
-      '<button type="button" class="chip" data-act="sample" data-sample="boss">Slither Wing on wave 2350</button></div>', "");
+      '<button type="button" class="chip" data-act="sample" data-sample="boss">Slither Wing on wave 2350</button></div>');
   }
 
   function aboutPanel() {
@@ -99,7 +97,7 @@
       "<li>From a session save it keeps the wave, your party, held items, balls, money and the wild Pokémon of the current wave. From a system save it keeps starter unlocks and which species you have caught.</li>" +
       "<li>Trainer and secret ids are dropped. Nothing leaves your browser: the decoded summary is stored in this browser only, so a reload keeps it.</li>" +
       "<li>The game writes its save at the start of each wave, so the page is at most one wave behind what you see.</li></ul>" +
-      '<h3 class="h">Sources</h3><ul class="bullets">' + kb.sources.map(function (s) { return '<li><a href="' + h(s.url) + '" target="_blank" rel="noopener noreferrer">' + h(s.label) + "</a></li>"; }).join("") + "</ul>", "", "", true);
+      '<h3 class="h">Sources</h3><ul class="bullets">' + kb.sources.map(function (s) { return '<li><a href="' + h(s.url) + '" target="_blank" rel="noopener noreferrer">' + h(s.label) + "</a></li>"; }).join("") + "</ul>", "", true);
   }
 
   ui.views.sync = function (ctx) {

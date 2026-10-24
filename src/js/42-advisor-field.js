@@ -161,7 +161,7 @@
     var ion = movesIn(desc, "ionDeluge");
     if (ion.length) add("care", moveNames(ion), "Turns Normal-type moves Electric for the turn, so a Normalized attack can hit a Ghost that turn.");
     var meddle = movesIn(desc, "abilityChange");
-    if (meddle.length) add("care", "Ability moves: " + moveNames(meddle), "It can swap, copy or overwrite abilities, including the Normalize you gave it or Yamazone's Sturdy. Re-check abilities if the fight goes wrong.");
+    if (meddle.length) add("care", "Changes abilities: " + moveNames(meddle), "It can swap, copy or overwrite abilities, including the Normalize you gave it or Yamazone's Sturdy. Re-check abilities if the fight goes wrong.");
     var hb = movesIn(desc, "healBlock").filter(function (m) { return data.mv(m).cat === 2; });
     if (hb.length) add("care", "Heal Block on you", "If it lands on Yamazone, Leech Seed stops healing for 5 turns and Sturdy does not re-arm.");
     var locks = movesIn(desc, "disable").concat(movesIn(desc, "encore"), movesIn(desc, "torment"), movesIn(desc, "imprison"));

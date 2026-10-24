@@ -217,7 +217,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
 .panel-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 12px 14px 0; }
 .panel-h h2 { font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.25; }
-.panel-h .meta { font-size: 13px; color: var(--ink-3); }
+
 .panel-b { padding: 10px 14px 14px; display: grid; gap: 12px; min-width: 0; }
 .panel.flat { background: transparent; border-style: dashed; }
 .sub { font-size: 13px; color: var(--ink-3); }
