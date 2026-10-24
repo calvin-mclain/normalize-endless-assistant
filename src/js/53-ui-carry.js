@@ -14,7 +14,13 @@
     var scans = s.enemies.map(function (e) { return adv.scanEnemy(e, ctx, "carry"); });
     var foes = s.enemies.map(function (e, i) { return F.foeCard(e, scans[i], ctx); }).join("");
     var wanted = scans.filter(function (x) { return x.wanted; }).length;
-    var head = wanted ? H.callout("shiny", wanted === 1 ? "One of these is worth catching" : wanted + " of these are worth catching", "Catch before Regigigas knocks it out. Balls cannot be thrown while two wild Pokémon are on the field: remove the other one first.")
+    var candy = scans.filter(function (x) { return x.candyWant; }).length;
+    var order = adv.catchOrder(s.enemies, scans);
+    var firstName = order.length > 1 && (scans[order[0]].wanted || scans[order[0]].candyWant) && (scans[order[1]].wanted || scans[order[1]].candyWant) ? s.enemies[order[0]].name : "";
+    var head = wanted ? H.callout("shiny", wanted === 1 ? "One of these is worth catching" : wanted + " of these are worth catching",
+        (firstName ? h(firstName) + " first: more unlocks left to buy, or fewer candies. " : "") + "Catch before Regigigas knocks it out. Balls cannot be thrown while two wild Pokémon are on the field: remove the other one first.")
+      : candy ? H.callout("plain", candy === 1 ? "One of these is worth a catch for its candies" : candy + " of these are worth a catch for their candies",
+        (firstName ? h(firstName) + " first: more unlocks left to buy, or fewer candies. " : "") + "Its starter still has something to buy and is short of candies. You are fighting this wave anyway, so a catch costs little and brings a shop.")
       : "";
     var forced = info.forced ? H.callout("danger", adv.kindLabel(info.kind), "A forced single boss: no fleeing, no catching. Regigigas handles it during the carry phase.") : "";
     var next = '<p class="sub">Next forced boss: wave ' + util.fmt(info.nextForced) + " (" + h(adv.kindLabel(info.nextForcedKind)) + ")" + (info.toForced ? ", in " + info.toForced + " waves." : ", now.") + "</p>";

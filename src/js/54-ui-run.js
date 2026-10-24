@@ -3,7 +3,7 @@
   "use strict";
   var ui = NZ.ui, util = NZ.util, data = NZ.data, kb = NZ.kb, adv = NZ.advisor, h = util.esc, H = ui.html, F = ui.field;
   var SEV_PILL = { danger: ["danger", "bad"], care: ["care", "todo"], info: ["note", "info"], good: ["good", "ok"] };
-  var REASON_PILL = { shiny: ["shiny", "shiny"], item: ["item", "todo"], maybe: ["check", "info"], want: ["catch", "ok"] };
+  var REASON_PILL = { shiny: ["shiny", "shiny"], item: ["item", "todo"], maybe: ["check", "info"], candy: ["candy", "candy"], want: ["catch", "ok"] };
 
   function currentWave(ctx) { return ctx.session ? ctx.session.wave : Math.max(1, Math.floor(ui.state.run.wave || 1)); }
 
@@ -19,7 +19,7 @@
     var s = ctx.session;
     if (s) {
       var v = adv.verdict(ctx);
-      var cls = { boss: "boss", stay: "stay", steal: "steal", gastro: "gastro" }[v.action] || "run";
+      var cls = { boss: "boss", stay: "stay", candy: "candy", steal: "steal", gastro: "gastro" }[v.action] || "run";
       var call = v.action === "boss" ? "Boss fight" : v.title;
       var reasons = v.reasons.length ? '<ul class="alerts">' + v.reasons.map(function (r) {
         var p = REASON_PILL[r.sev] || REASON_PILL.want;
@@ -28,6 +28,7 @@
       var notes = v.notes.map(function (n) { return "<li>" + h(n) + "</li>"; }).join("");
       var foes = s.enemies.map(function (e, i) { return F.foeCard(e, v.scans[i], ctx); }).join("");
       var sub = { run: "Nothing here for you. Teddiurk runs.", stay: "Something on this wave is worth the turns.", boss: "See the boss desk below for this fight.",
+        candy: "Nothing new for the dex, but a starter here still has unlocks to buy and cannot pay for the next one. Catch it if the turns are cheap; otherwise run. Candies go to the root starter of the chain.",
         steal: "Nothing to catch, but there are items you are short of. Thief takes the best item first (30 % a hit, three hits with two Multi Lens); then Teddiurk runs.",
         gastro: v.steals.length ? "There are items to take once the gas is off." : "" }[v.action] || "";
       return H.panel("This wave", F.waveLine(s) + '<div class="verdict ' + cls + '"><div class="verdict-call">' + h(call) + "</div>" + (sub ? H.teach(h(sub), "", "div") : "") + reasons +

@@ -3,7 +3,7 @@
   "use strict";
   var ui = NZ.ui, util = NZ.util, data = NZ.data, kb = NZ.kb, adv = NZ.advisor, h = util.esc, H = ui.html;
 
-  var ALERT_PILL = { shiny: ["shiny", "shiny"], want: ["catch", "ok"], maybe: ["check", "info"], item: ["item", "todo"], info: ["note", "quiet"] };
+  var ALERT_PILL = { shiny: ["shiny", "shiny"], want: ["catch", "ok"], maybe: ["check", "info"], candy: ["candy", "candy"], item: ["item", "todo"], info: ["note", "quiet"] };
   var KIND_PILL = { normal: "quiet", x0: "todo", paradox: "bad", eternatus: "bad", eternamax: "bad" };
 
   function itemList(items) {
@@ -37,7 +37,7 @@
       var p = ALERT_PILL[a.sev] || ALERT_PILL.info;
       return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + "</span></li>";
     }).join("");
-    return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
+    return '<div class="foe' + (scan.wanted ? " wanted" : scan.candyWant ? " candy" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
       (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") +
       (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing here for the build.</div>') +
       '<div><button type="button" class="btn link" data-act="scout" data-id="' + enemy.species + '" data-form="' + enemy.form + '">Species details</button></div></div>';

@@ -289,6 +289,47 @@
     return true;
   }
 
+  /**
+   * What a catch does for the species' candy shop. Candies go to the root starter only (GameData.setPokemonSpeciesCaught
+   * recurses down the prevolution chain and adds candy at the root): 1 per catch, 5 × 2^variant for a shiny, doubled for
+   * a boss, capped at 9,999. The shop sells the passive and two cost reductions (starters.ts allStarterCandyCosts).
+   * Returns null when no save is synced, the root starter is unknown to this page's data, or the save has no entry for it.
+   *   left: unlocks still to buy, in shop order; next: the first of them; short: candies missing for it;
+   *   rank: [unlocks left (more first), candies (fewer first)], the order the player catches in.
+   */
+  function candyNeed(enemy, system) {
+    if (!system || !system.starters) return null;
+    var rootId = data.root(enemy.species), rootSp = data.sp(rootId);
+    if (!rootSp || !rootSp.c) return null;
+    var st = system.starters[rootId];
+    if (!st) return null;
+    var candy = st.candy || 0, reductions = st.reductions || 0, passiveUnlocked = !!(st.passiveAttr & 1);
+    var costs = data.candyCosts(rootSp.c), left = [];
+    if (!passiveUnlocked) left.push({ what: "passive", cost: costs.passive });
+    for (var i = reductions; i < 2; i++) left.push({ what: i === 0 ? "first cost reduction" : "second cost reduction", cost: costs.reductions[i] });
+    var gain = (enemy.shiny ? 5 * Math.pow(2, enemy.variant || 0) : 1) * (enemy.boss ? 2 : 1);
+    var next = left.length ? left[0] : null;
+    return { root: rootId, name: rootSp.n, candy: candy, left: left, next: next, short: next ? Math.max(0, next.cost - candy) : 0,
+      gain: Math.min(gain, Math.max(0, 9999 - candy)), rank: [left.length, candy] };
+  }
+
+  /** Order for catch targets: most unlocks left first, then fewest candies. Pokémon without candy data go last. */
+  function candyOrder(a, b) {
+    if (!a && !b) return 0;
+    if (!a) return 1;
+    if (!b) return -1;
+    return b.rank[0] - a.rank[0] || a.rank[1] - b.rank[1];
+  }
+
+  /** One line about the candy side of a catch, for an alert. */
+  function candyText(c) {
+    if (!c.left.length) return c.name + " has nothing left to buy with candies (" + c.candy + " banked). Catch it only for the dex.";
+    var want = c.left.length === 1 ? "1 unlock left (" + c.next.what + ", " + c.next.cost + " candies)" : c.left.length + " unlocks left (next: " + c.next.what + ", " + c.next.cost + " candies)";
+    var have = c.candy + (c.candy === 1 ? " candy" : " candies") + " banked";
+    var gain = "this catch gives " + c.gain;
+    return c.name + ": " + want + ", " + have + ", " + (c.short ? c.short + " short; " + gain + "." : "enough already; " + gain + ". Spend them first.");
+  }
+
   /** Free-slot pickups for the running phase: Whimsicott-style Tailwind and a Mold Breaker Gastro Acid body. */
   function freeSlotMatches(desc, ctx) {
     var out = [];
@@ -327,7 +368,7 @@
     var exact = !!ctx.peek;
     var desc = describe(enemy, exact);
     var alerts = [];
-    if (!desc) return { desc: null, alerts: [{ sev: "info", text: "Unknown species #" + enemy.species + " (newer than this page's game data).", want: false }], wanted: false, steal: false, gas: "no" };
+    if (!desc) return { desc: null, alerts: [{ sev: "info", text: "Unknown species #" + enemy.species + " (newer than this page's game data).", want: false }], wanted: false, candyWant: false, steal: false, gas: "no", candy: null };
     function add(sev, text, want) { alerts.push({ sev: sev, text: text, want: !!want }); }
 
     if (enemy.shiny) add("shiny", "Shiny" + (enemy.variant ? " (tier " + (enemy.variant + 1) + ")" : "") + ". Master Ball it, or use the safe-capture steps.", true);
@@ -337,6 +378,9 @@
       else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex. Catch it.", true);
       else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true);
     }
+    // candy: a softer reason of its own while the root starter still has something to buy and cannot pay for it yet
+    var candy = candyNeed(enemy, ctx.system);
+    if (candy) add("candy", candyText(candy), candy.left.length > 0 && candy.short > 0);
     var matches = scout(enemy, ctx, exact);
     matches.forEach(function (m) {
       if (m.weak) return;
@@ -355,10 +399,29 @@
     var gasPassive = desc.passiveOn && data.aIn("neutralizingGas", desc.passive);
     if (gasPassive || (exact && gasAbility)) gas = "yes";
     else if (gasAbility) gas = "maybe";
-    // wanted: worth catching (shiny, missing from the dex, a piece of the build). steal: only its items are.
-    var wanted = alerts.some(function (a) { return a.want && a.sev !== "item"; });
+    // wanted: worth catching (shiny, missing from the dex, a piece of the build). candyWant: only its candies are. steal: only its items are.
+    var wanted = alerts.some(function (a) { return a.want && a.sev !== "item" && a.sev !== "candy"; });
+    var candyWant = !wanted && alerts.some(function (a) { return a.want && a.sev === "candy"; });
     var steal = alerts.some(function (a) { return a.want && a.sev === "item"; });
-    return { desc: desc, alerts: alerts, wanted: wanted, steal: steal, gas: gas };
+    return { desc: desc, alerts: alerts, wanted: wanted, candyWant: candyWant, steal: steal, gas: gas, candy: candy };
+  }
+
+  /** Enemy indexes: catch targets, then candy-only targets, then the rest; each group in candy order (candyOrder). */
+  function catchOrder(enemies, scans) {
+    function tier(sc) { return sc.wanted ? 2 : sc.candyWant ? 1 : 0; }
+    return enemies.map(function (e, i) { return i; }).sort(function (a, b) {
+      return tier(scans[b]) - tier(scans[a]) || candyOrder(scans[a].candy, scans[b].candy) || a - b;
+    });
+  }
+
+  /** When two wild Pokémon are both worth catching: which one first, and why. Balls need the other one gone. */
+  function firstCatch(enemies, scans, order) {
+    var a = scans[order[0]].candy, b = scans[order[1]].candy, name = enemies[order[0]].name;
+    var why = !a || !b ? ""
+      : a.left.length !== b.left.length ? a.name + " has more unlocks left to buy (" + a.left.length + " against " + b.left.length + ")"
+        : a.candy !== b.candy ? "both have " + a.left.length + " unlock" + (a.left.length === 1 ? "" : "s") + " left, and " + a.name + " has fewer candies (" + a.candy + " against " + b.candy + ")"
+          : "";
+    return "Both are worth catching. Catch " + name + " first" + (why ? ": " + why : "") + ". Remove the other one, then throw.";
   }
 
   /** The per-wave call while running: three checks, then flee. */
@@ -374,27 +437,31 @@
     var runAway = !!runner && runner.passiveOn && runner.passive === A("RUN_AWAY") || (!!runner && runner.ability === A("RUN_AWAY"));
     var notes = [];
     if (info.forced) {
-      return { action: "boss", title: adv.kindLabel(info.kind), info: info, scans: scans, notes: ["No fleeing and no catching on this wave. Gouot must be on the field when it ends."], reasons: [], catches: [], steals: [] };
+      return { action: "boss", title: adv.kindLabel(info.kind), info: info, scans: scans, notes: ["No fleeing and no catching on this wave. Gouot must be on the field when it ends."], reasons: [], catches: [], candies: [], steals: [] };
     }
-    var catches = [], steals = [];
-    scans.forEach(function (sc, i) {
-      sc.alerts.forEach(function (a) {
-        if (a.want) (a.sev === "item" ? steals : catches).push({ who: s.enemies[i].name, text: a.text, sev: a.sev });
+    var catches = [], candies = [], steals = [];
+    var order = catchOrder(s.enemies, scans);
+    order.forEach(function (i) {
+      scans[i].alerts.forEach(function (a) {
+        if (a.want) (a.sev === "item" ? steals : a.sev === "candy" ? candies : catches).push({ who: s.enemies[i].name, text: a.text, sev: a.sev });
       });
     });
+    var catchable = function (sc) { return sc.wanted || sc.candyWant; };
+    var first = order.length > 1 && catchable(scans[order[0]]) && catchable(scans[order[1]]) ? firstCatch(s.enemies, scans, order) : "";
     var gasYes = scans.some(function (sc) { return sc.gas === "yes"; });
     var gasMaybe = scans.some(function (sc) { return sc.gas === "maybe"; });
     if (!runner) notes.push("No runner found in the synced party.");
     else if (!runAway) notes.push(runner.name + " does not have Run Away active: fleeing is not guaranteed.");
     else if (!runnerOut) notes.push(runner.name + " is not on the field (slot " + (runnerIdx + 1) + " in a " + (s.double ? "double" : "single") + " battle). Run Away only works for a Pokémon that is out.");
+    if (first) notes.push(first);
     if (info.kind === "x0") notes.push("X0 wave: bosses cannot be Roared away. If you stay, Trick-or-Treat the one you want and Entrainment its partner.");
-    // catch-worthy beats everything; Neutralizing Gas has to be answered before you can leave; items are a quick Thief
-    var action = catches.length ? "stay" : gasYes ? "gastro" : steals.length ? "steal" : "run";
-    var busy = action === "stay" || action === "steal";
-    if (gasYes) notes.unshift("Neutralizing Gas is out: your lures and Run Away are off. " + (action === "stay" ? "Gastro Acid that Pokémon before anything else." : "Teddiurk uses Gastro Acid on it, then runs next turn."));
+    // catch-worthy beats everything; candy alone is a softer call; Neutralizing Gas has to be answered before you can leave; items are a quick Thief
+    var action = catches.length ? "stay" : candies.length ? "candy" : gasYes ? "gastro" : steals.length ? "steal" : "run";
+    var busy = action === "stay" || action === "candy" || action === "steal";
+    if (gasYes) notes.unshift("Neutralizing Gas is out: your lures and Run Away are off. " + (action === "stay" || action === "candy" ? "Gastro Acid that Pokémon before anything else." : "Teddiurk uses Gastro Acid on it, then runs next turn."));
     else if (gasMaybe) notes.unshift("One of these can have Neutralizing Gas. If the game announces it" + (busy ? ", Gastro Acid that Pokémon first." : ": Gastro Acid, then run."));
-    var title = { stay: "Stay", steal: "Steal, then run", gastro: "Gastro Acid, then run", run: "Run" }[action];
-    return { action: action, title: title, info: info, scans: scans, reasons: catches.concat(steals), catches: catches, steals: steals, notes: notes };
+    var title = { stay: "Stay", candy: "Catch for candy, or run", steal: "Steal, then run", gastro: "Gastro Acid, then run", run: "Run" }[action];
+    return { action: action, title: title, info: info, scans: scans, reasons: catches.concat(candies, steals), catches: catches, candies: candies, steals: steals, notes: notes };
   }
 
   NZ.advisor.describe = describe;
@@ -405,4 +472,7 @@
   NZ.advisor.verdict = verdict;
   NZ.advisor.wantedItems = wantedItems;
   NZ.advisor.dexNews = dexNews;
+  NZ.advisor.candyNeed = candyNeed;
+  NZ.advisor.candyOrder = candyOrder;
+  NZ.advisor.catchOrder = catchOrder;
 })();

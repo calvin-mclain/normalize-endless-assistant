@@ -25,6 +25,8 @@
   --info-soft: #dde8fa;
   --shiny: #7d5a00;
   --shiny-soft: #fdeebf;
+  --candy: #a1366d;
+  --candy-soft: #fbe3ef;
   --shadow: 0 1px 0 rgba(31, 26, 46, 0.06), 0 6px 18px -12px rgba(31, 26, 46, 0.35);
   --font-display: "Pixelify Sans", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
   --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -57,6 +59,8 @@
     --info-soft: #172a47;
     --shiny: #ffd866;
     --shiny-soft: #3c3110;
+    --candy: #f29ac4;
+    --candy-soft: #3f1d30;
     --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 20px -14px rgba(0, 0, 0, 0.8);
     color-scheme: dark;
   }
@@ -85,6 +89,8 @@
   --info-soft: #172a47;
   --shiny: #ffd866;
   --shiny-soft: #3c3110;
+  --candy: #f29ac4;
+  --candy-soft: #3f1d30;
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 20px -14px rgba(0, 0, 0, 0.8);
   color-scheme: dark;
 }
@@ -233,6 +239,7 @@ h3.h { font-size: 13px; letter-spacing: 0.07em; text-transform: uppercase; color
 .pill.bad { background: var(--stop-soft); color: var(--stop); }
 .pill.info { background: var(--info-soft); color: var(--info); }
 .pill.shiny { background: var(--shiny-soft); color: var(--shiny); }
+.pill.candy { background: var(--candy-soft); color: var(--candy); }
 .pill.quiet { background: transparent; border: 1px solid var(--line); color: var(--ink-3); font-weight: 600; }
 
 .type {
@@ -372,6 +379,8 @@ tbody th { font-weight: 700; }
 .verdict.run .verdict-call { color: var(--go); }
 .verdict.stay { border-color: var(--shiny); background: var(--shiny-soft); }
 .verdict.stay .verdict-call { color: var(--shiny); }
+.verdict.candy { border-color: var(--candy); background: var(--candy-soft); }
+.verdict.candy .verdict-call { color: var(--candy); }
 .verdict.steal { border-color: var(--khaki); background: var(--khaki-soft); }
 .verdict.steal .verdict-call { color: var(--khaki); }
 .verdict.gastro { border-color: var(--warn); background: var(--warn-soft); }
@@ -383,6 +392,7 @@ tbody th { font-weight: 700; }
 .foes { display: grid; gap: 8px; }
 .foe { border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; display: grid; gap: 5px; background: var(--raised); min-width: 0; }
 .foe.wanted { border-color: var(--shiny); border-width: 2px; }
+.foe.candy { border-color: var(--candy); }
 .foe.steal { border-color: var(--khaki); }
 .foe-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .foe-name { font-weight: 700; font-size: 15.5px; }
