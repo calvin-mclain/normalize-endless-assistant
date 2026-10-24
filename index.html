@@ -3383,24 +3383,27 @@ NZ.ui = (function () {
     var audit = adv.itemAudit(ctx);
     var all = audit.roles.reduce(function (acc, r) { return acc.concat(r.rows); }, []).concat(audit.bag);
     var left = all.filter(function (row) { return !row.done; });
-    var roles = audit.roles.map(function (r) {
-      var rows = r.rows.map(function (row) {
+    var onlyOpen = phase === "run"; // while running, list only what is still to collect
+    function show(row) { return !onlyOpen || !row.done; }
+    var roles = audit.roles.filter(function (r) { return r.rows.some(show); }).map(function (r) {
+      var rows = r.rows.filter(show).map(function (row) {
         var count = audit.synced ? '<span class="cnt">' + row.have + " / " + row.target + "</span>" : H.stepper("items." + r.role + ":" + row.key, row.have, 0, row.target);
         return '<div class="audit-row' + (row.done ? " done" : "") + '" title="' + h(row.why) + '"><span>' + h(row.name) + (row.note ? ' <span class="sub">' + h(row.note) + "</span>" : "") + "</span>" + count + H.segbar(row.have, row.target, "go") + "</div>";
       }).join("");
       return '<div class="audit-role"><div class="row between"><strong>' + h(r.name) + '</strong><span class="who">' + h(kb.roles[r.role].name) + "</span></div>" + rows + "</div>";
     }).join("");
-    var bag = audit.bag.map(function (b) {
+    var bag = audit.bag.filter(show).map(function (b) {
       var count = audit.synced ? '<span class="cnt">' + b.have + " / " + b.target + "</span>" : H.stepper("items.bag:" + b.key, b.have, 0, b.target);
       return '<div class="audit-row' + (b.done ? " done" : "") + '" title="' + h(b.why) + '"><span>' + h(b.name) + (b.note ? ' <span class="sub">' + h(b.note) + "</span>" : "") + "</span>" + count + H.segbar(b.have, b.target, "go") + "</div>";
     }).join("");
-    var balls = audit.balls ? '<div class="audit-row' + (audit.balls.master >= 50 ? " done" : "") + '"><span>Master Balls <span class="sub">about 50 before running</span></span><span class="cnt">' + audit.balls.master + " / 50</span>" + H.segbar(audit.balls.master, 50, "go") +
+    var balls = audit.balls && !(onlyOpen && audit.balls.master >= 50) ? '<div class="audit-row' + (audit.balls.master >= 50 ? " done" : "") + '"><span>Master Balls <span class="sub">about 50 before running</span></span><span class="cnt">' + audit.balls.master + " / 50</span>" + H.segbar(audit.balls.master, 50, "go") +
       '</div><div class="audit-row"><span>Rogue Balls</span><span class="cnt">' + audit.balls.rogue + "</span><span></span></div>" : "";
-    var meter = '<div class="meter"><div class="meter-top"><span>' + (left.length ? (phase === "run" ? "Still to collect while you run: " : "Still to collect: ") + left.map(function (row) { return h(row.name); }).join(", ") : "Every item target is met.") +
+    var meter = '<div class="meter"><div class="meter-top"><span>' + (left.length ? (onlyOpen ? "Still to collect while you run; the rest is met." : "Still to collect: " + left.map(function (row) { return h(row.name); }).join(", ")) : "Every item target is met.") +
       '</span><strong class="num">' + (all.length - left.length) + " / " + all.length + "</strong></div>" + H.segbar(all.length - left.length, all.length, "go") + "</div>";
     var note = phase === "run" ? H.teach("Eggs and Grip Claws come off wild Pokémon only: Thief or Mini Black Hole whatever carries one, or catch it. Vitamins cannot be stolen; Carbos come through fuse-and-dump.", "sub")
       : H.teach("Don't wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.", "sub");
-    return H.panel("Items", meter + '<div class="audit">' + roles + '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div></div>" + note,
+    var bagBlock = bag || balls ? '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div>" : "";
+    return H.panel("Items", meter + (roles || bagBlock ? '<div class="audit">' + roles + bagBlock + "</div>" : "") + note,
       audit.synced ? "counted from your save" : "set counts by hand, or sync", ' id="items-' + (phase || "carry") + '"');
   }
 

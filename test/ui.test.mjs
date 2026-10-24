@@ -160,16 +160,25 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.ok((await row.getAttribute("class")).includes("done"));
   });
 
-  await check("running: the Items panel is there too and shares the hand-set counts", async () => {
+  await check("running: the Items panel lists only what is still to collect, sharing the hand-set counts", async () => {
     await page.click("#tab-run");
     const items = page.locator("#items-run");
     assert.equal(await items.count(), 1, "the Running tab has its own copy of the Items panel");
-    const row = items.locator(".audit-row", { hasText: "Wide Lens" }).first();
-    assert.match(await row.locator("output").innerText(), /^3$/, "the count set on the Carry tab carries over");
     assert.match(await items.locator(".meter-top").innerText(), /Still to collect while you run/);
-    await items.locator('.stepper button[data-bind="items.staller:WIDE_LENS"][data-d="-1"]').click();
+    assert.equal(await items.locator(".audit-row.done").count(), 0, "met targets are not listed while running");
+    const staller = '[data-bind="items.staller:WIDE_LENS"]';
+    assert.equal(await items.locator(staller).count(), 0, "the staller's Wide Lens is at target, so it is gone");
     await page.click("#tab-carry");
-    assert.match(await page.locator("#items-carry .audit-row", { hasText: "Wide Lens" }).first().locator("output").innerText(), /^2$/, "a change on the Running tab shows on the Carry tab");
+    await page.click('#items-carry .stepper button[data-bind="items.staller:WIDE_LENS"][data-d="-1"]');
+    await page.click("#tab-run");
+    const row = items.locator(".audit-row", { has: page.locator(staller) });
+    assert.match(await row.locator("output").innerText(), /^2$/, "an open target comes back with the count set on the Carry tab");
+    await row.locator('.stepper button[data-d="1"]').click();
+    assert.equal(await items.locator(staller).count(), 0, "meeting it on the Running tab drops it again");
+    await page.click("#tab-carry");
+    const carryRow = page.locator("#items-carry .audit-row", { has: page.locator(staller) });
+    assert.match(await carryRow.locator("output").innerText(), /^3$/, "the Carry tab shares the count");
+    assert.ok((await carryRow.getAttribute("class")).includes("done"), "and keeps showing met targets");
   });
 
   await check("running: the manual wave caller knows the 50-wave rhythm", async () => {
