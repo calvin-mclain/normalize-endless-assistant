@@ -48,6 +48,11 @@ assistant tab (`window.opener.postMessage`, game origin checked on receipt). Kee
 CryptoJS AES (OpenSSL "Salted__", MD5 key derivation, AES-256-CBC), passphrase `x0i2O7WRiANTqPmZ`.
 localStorage keys `data_<user>` and `sessionData<slot>_<user>`.
 
+## Shipping
+
+No pull requests. Work on a branch, then merge it into `main` locally with a fast-forward only (`git merge --ff-only`)
+and push `main`. If `main` has moved, rebase the branch onto it first so the merge stays a fast-forward.
+
 ## Tests
 
 Run `npm test` before every commit (after `npm install` and `npx playwright install chromium` once).
