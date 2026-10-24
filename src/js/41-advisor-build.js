@@ -196,10 +196,31 @@
   }
 
   /** Have/target rows for the four fusions and the bag. Manual counts fill in when nothing is synced. */
+  /**
+   * The goal while running: both speed Pokémon at kb.SPEED_TARGET by the end. Eggs and EXP Shares exist only to get
+   * them there, so a holder that is already there has no egg target left.
+   */
+  function speedGoal(ctx) {
+    var rows = [];
+    ["staller", "partner"].forEach(function (role) {
+      var m = ctx.assign.byRole[role];
+      if (!m || !m.stats.length) return;
+      var base = m.fusion ? data.fuse({ id: m.species, form: m.form }, m.fusion).stats[SPD] : data.form(m.species, m.form).stats[SPD];
+      var eff = data.natureEffect(m.nature);
+      var opts = { base: base, iv: m.ivs.length ? m.ivs[SPD] : 31, carbos: m.items.CARBOS || 0, soulDew: m.items.SOUL_DEW || 0, nature: eff && eff.up === SPD ? 1 : eff && eff.down === SPD ? -1 : 0 };
+      var need = adv.levelForSpeed(opts, kb.SPEED_TARGET);
+      rows.push({ role: role, name: m.name, speed: m.stats[SPD], level: m.level, need: need, levelsToGo: Math.max(0, need - m.level), done: m.stats[SPD] >= kb.SPEED_TARGET });
+    });
+    return { rows: rows, known: rows.length === 2, done: rows.length === 2 && rows.every(function (r) { return r.done; }),
+      shares: ctx.session ? (ctx.session.bag.EXP_SHARE || 0) : null };
+  }
+
   function itemAudit(ctx) {
     var out = { roles: [], bag: [], balls: null, synced: !!ctx.session };
+    var goal = speedGoal(ctx);
     ["staller", "runner", "partner", "killer"].forEach(function (role) {
       var m = ctx.assign.byRole[role], targets = kb.finalTeam[role].items, rows = [];
+      var fastEnough = goal.rows.some(function (g) { return g.role === role && g.done; });
       Object.keys(targets).forEach(function (key) {
         var target = targets[key], have, note = "";
         if (ctx.session) {
@@ -212,7 +233,9 @@
         } else {
           have = (ctx.manual.items && ctx.manual.items[role + ":" + key]) || 0;
         }
-        rows.push({ key: key, name: kb.itemInfo[key].name, have: have, target: target, done: have >= target, note: note, why: kb.itemInfo[key].why });
+        var done = have >= target;
+        if (!done && fastEnough && (key === "LUCKY_EGG" || key === "GOLDEN_EGG")) { done = true; note = (note ? note + "; " : "") + "speed goal met"; }
+        rows.push({ key: key, name: kb.itemInfo[key].name, have: have, target: target, done: done, note: note, why: kb.itemInfo[key].why });
       });
       out.roles.push({ role: role, name: m ? m.name : kb.finalTeam[role].name, member: m || null, rows: rows });
     });
@@ -296,6 +319,7 @@
   }
 
   NZ.advisor.makeContext = makeContext;
+  NZ.advisor.speedGoal = speedGoal;
   NZ.advisor.memberFor = memberFor;
   NZ.advisor.roleSpecies = roleSpecies;
   NZ.advisor.stepStatus = stepStatus;

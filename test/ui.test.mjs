@@ -330,6 +330,46 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
 }
 
 // =====================================================================================================================
+// 1c. Running: speed is the goal, alerts say each thing once
+// =====================================================================================================================
+{
+  const { ctx, page, errors } = await fresh();
+
+  await check("running: the Speed panel leads the right column and the Doubles chain is gone", async () => {
+    await page.click("#tab-sync");
+    await page.click('button[data-act="sample"][data-sample="shiny"]');
+    assert.equal(await h1(page), "Running");
+    assert.equal(await page.locator(".panel:has(h2:text('Doubles chain'))").count(), 0);
+    assert.match(await page.locator(".cols > .col").nth(1).locator(".panel h2").first().innerText(), /Speed and levels/);
+    const goal = await text(page, "#speed-panel .callout");
+    assert.match(goal, /levels to go/);
+    assert.match(goal, /EXP Share 0 of 5/, "no EXP Share in the sample bag: the bench earns nothing");
+    assert.match(await text(page, "#items-run"), /EXP Share/, "EXP Share is an item target");
+  });
+
+  await check("running: the verdict names each reason once in a few words; the foe card holds the advice", async () => {
+    const reasons = await text(page, ".verdict .alerts");
+    assert.match(reasons, /Dreepy · shiny/);
+    assert.match(reasons, /Weezing · 1 × Golden Egg/);
+    assert.doesNotMatch(reasons, /Master Ball it|Thief or Mini Black Hole/);
+    const foe = () => page.locator(".foe", { hasText: "Dreepy" }).innerText();
+    assert.match(await foe(), /Master Ball it, or use the safe-capture steps/);
+    await page.click("#density-compact");
+    assert.match(await foe(), /Shiny/);
+    assert.doesNotMatch(await foe(), /Master Ball it/, "the advice is teaching prose");
+    await page.click("#density-explain");
+  });
+
+  await check("running: Gouot out of slot 1 is a warning on the wave, not a panel", async () => {
+    await page.evaluate(() => { const p = NZ.ui.game.session.party; p.push(p.shift()); NZ.ui.render(); });
+    assert.match(await text(page, ".panel:has(h2:text('This wave')) .callout.warn"), /is not in slot 1/);
+  });
+
+  await check("no script errors on the running tab", async () => assert.deepEqual(errors, []));
+  await ctx.close();
+}
+
+// =====================================================================================================================
 // 2. Samples, paste, files
 // =====================================================================================================================
 {

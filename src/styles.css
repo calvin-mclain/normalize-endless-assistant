@@ -407,6 +407,8 @@ tbody th { font-weight: 700; }
 .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .slot { border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; background: var(--raised); display: grid; gap: 3px; min-width: 0; }
 .slot.off { opacity: 0.6; border-style: dashed; }
+.slot.done { border-color: var(--go); }
+.slot.done .big-odds { color: var(--go); }
 .slot-n { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
 .big-odds { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.1; }
 .big-odds .unit { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--ink-3); }

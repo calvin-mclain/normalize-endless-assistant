@@ -285,4 +285,48 @@ const envelope = JSON.stringify({ source: "nz-bridge", v: 1, entries: {
 const decoded = await save.decodeAny(envelope);
 assert.deepEqual(decoded.map(x => x.kind).sort(), ["session", "session", "system"]);
 assert.deepEqual(decoded.filter(x => x.kind === "session").map(x => x.raw.waveIndex).sort((a, b) => a - b), [734, 1763]);
+// ---------- alerts say the fact once; the speed goal retires the eggs ----------
+{
+  const s = save.normalizeSession(samples.shinySample());
+  const c = adv.makeContext({ session: s, roster });
+  const sh = adv.scanEnemy(s.enemies[0], c, "run").alerts.find(a => a.sev === "shiny");
+  assert.ok(sh && /^Shiny/.test(sh.text) && !/Master Ball/.test(sh.text), "the text is the fact");
+  assert.match(sh.advice, /Master Ball/);
+  assert.match(sh.label, /^shiny/);
+  const it = adv.scanEnemy(s.enemies[1], c, "run").alerts.find(a => a.sev === "item");
+  assert.ok(it && /short of\.$/.test(it.text) && /Thief/.test(it.advice) && /Golden Egg/.test(it.label), JSON.stringify(it));
+  let v = adv.verdict(c);
+  assert.ok(v.reasons.length && v.reasons.every(r => r.label && r.label.length < 40), "every reason carries a short label");
+  assert.deepEqual(v.warnings, [], "Gouot leads and nothing is fainted");
+  const swapped = save.normalizeSession(samples.shinySample());
+  swapped.party.push(swapped.party.shift());
+  v = adv.verdict(adv.makeContext({ session: swapped, roster }));
+  assert.ok(v.warnings.some(w => /is not in slot 1/.test(w.title)), JSON.stringify(v.warnings));
+  const fainted = save.normalizeSession(samples.shinySample());
+  fainted.party[1].hp = 0;
+  v = adv.verdict(adv.makeContext({ session: fainted, roster }));
+  assert.ok(v.warnings.some(w => /is fainted/.test(w.title)), "a fainted lure holder on the field is a warning");
+
+  let g = adv.speedGoal(c);
+  assert.equal(g.known, true);
+  assert.equal(g.done, false);
+  assert.ok(g.rows.every(r => r.levelsToGo > 0 && r.need > r.level && r.speed < kb.SPEED_TARGET));
+  assert.equal(g.shares, 0, "the sample bag has no EXP Share");
+  let audit = adv.itemAudit(c);
+  assert.ok(!audit.roles.find(r => r.role === "partner").rows.find(r => r.key === "LUCKY_EGG").done);
+  assert.ok(audit.bag.some(b => b.key === "EXP_SHARE" && b.target === 5 && !b.done));
+  const fast = save.normalizeSession(samples.shinySample());
+  fast.party.forEach(m => { if (m.stats.length) m.stats[5] = kb.SPEED_TARGET; });
+  const fc = adv.makeContext({ session: fast, roster });
+  assert.equal(adv.speedGoal(fc).done, true);
+  audit = adv.itemAudit(fc);
+  for (const role of ["staller", "partner"]) {
+    const rows = audit.roles.find(r => r.role === role).rows;
+    assert.ok(rows.find(r => r.key === "LUCKY_EGG").done && /speed goal met/.test(rows.find(r => r.key === "GOLDEN_EGG").note), role + " eggs retire once the speed goal is met");
+  }
+  v = adv.verdict(fc);
+  assert.equal(v.steals.length, 0, "the Golden Egg on Galarian Weezing is no longer worth a Thief: " + JSON.stringify(v.steals));
+  assert.equal(v.action, "stay", "the shiny still is");
+}
+
 console.log("advisor tests passed");

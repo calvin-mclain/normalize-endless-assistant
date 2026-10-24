@@ -37,6 +37,13 @@ assistant tab (`window.opener.postMessage`, game origin checked on receipt). Kee
 - Lucky Eggs and Golden Eggs are never in the shop. They only come off wild Pokémon (Thief, Mini Black Hole,
   or a catch).
 - Vitamins cannot be stolen. Carbos come through fuse-and-dump instead.
+- While running, the goal is Speed (400,000 on Gouot and Jynxgigas by wave 5850, `kb.SPEED_TARGET`). Eggs exist
+  only for that: once a holder is there its egg targets count as met (`advisor.speedGoal`, `itemAudit`). A catch
+  pays EXP like a win (`AttemptCapturePhase` queues `VictoryPhase`); fleeing pays none. A party member that did not
+  fight earns nothing without EXP Share: each share gives 20 % of the EXP divided by the number of fighters
+  (`BattleScene.applyPartyExp`), so five shares in a double battle give benched Jynxgigas half of every catch.
+- The Running tab has no Doubles chain panel: both fusions guarantee every wave. The verdict warns when Gouot is not
+  in slot 1 or a lure holder is fainted.
 - Wrong Pokémon led a wave: switch to one of the two extra Pokémon and let it faint. The replacement after
   a faint comes in without taking a hit.
 - "Worth catching" mirrors the game's grey Poké Ball (`EnemyBattleInfo`): a missing shiny, variant, gender

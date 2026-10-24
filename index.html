@@ -412,6 +412,8 @@ tbody th { font-weight: 700; }
 .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .slot { border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; background: var(--raised); display: grid; gap: 3px; min-width: 0; }
 .slot.off { opacity: 0.6; border-style: dashed; }
+.slot.done { border-color: var(--go); }
+.slot.done .big-odds { color: var(--go); }
 .slot-n { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
 .big-odds { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.1; }
 .big-odds .unit { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--ink-3); }
@@ -1048,6 +1050,7 @@ NZ.kb = (function () {
     GRIP_CLAW: { name: "Grip Claw", why: "10 % per claw per hit, attacking moves only. Useful on whoever attacks; does nothing on Jynxgigas." },
     REVIVER_SEED: { name: "Reviver Seed", why: "One safe turn to Gastro Acid a Paradox Pokémon or Eternatus." },
     MYSTICAL_ROCK: { name: "Mystical Rock", why: "Psychic Terrain lasts two turns longer." },
+    EXP_SHARE: { name: "EXP Share", why: "A Pokémon that sat out the battle earns nothing without one. Each share gives it 20 % of the EXP, split between the fighters: five shares in a double battle hand Jynxgigas half of every catch." },
     TERA_ORB: { name: "Tera Orb", why: "Needed to Terastallize; Tera Shards appear once you hold it." },
     LOCK_CAPSULE: { name: "Lock Capsule", why: "Lock rarities while rerolling for balls." },
     SHINY_CHARM: { name: "Shiny Charm", why: "Four charms make wild shinies 1 in 32." },
@@ -1059,6 +1062,7 @@ NZ.kb = (function () {
   var bagTargets = [
     { key: "TERA_ORB", target: 1, note: "plus Ghost Tera Shards for Jynxgigas and Teddiurk" },
     { key: "LOCK_CAPSULE", target: 1 },
+    { key: "EXP_SHARE", target: 5, note: "levels Jynxgigas from the bench" },
     { key: "SHINY_CHARM", target: 4 },
     { key: "AMULET_COIN", target: 5, soft: true }
   ];
@@ -1211,8 +1215,9 @@ NZ.kb = (function () {
   ];
 
   var speedNotes = [
-    "Only Gouot and Jynxgigas need levels, and only for Speed: about 400,000 Speed by wave 5850, roughly level 25,000.",
-    "Speed comes from a +Speed nature, 10 Soul Dew, 31 Carbos and levels. Levels come from Lucky and Golden Eggs on the EXP you earn from catches. Fleeing earns none.",
+    "Only Gouot and Jynxgigas need levels, and only for Speed: about 400,000 Speed by wave 5850, roughly level 25,000. Once both are there, eggs and EXP have done their job.",
+    "Speed comes from a +Speed nature, 10 Soul Dew, 31 Carbos and levels. Levels come from catches (a catch pays EXP like a win; fleeing pays none), multiplied by Lucky and Golden Eggs.",
+    "Jynxgigas sits out every normal wave, so it earns EXP only through EXP Shares in the bag: each share gives 20 % of a catch split between the two fighters, so five shares give it half.",
     "Rare Candies and Candy Jars are wasted picks for this build.",
     "Reference from Grex's wave 1152 run: Gouot level 2,300 with 42,900 Speed, the partner level 3,100 with 50,300 Speed, runner and boss killer level 1,900."
   ];
@@ -1239,7 +1244,7 @@ NZ.kb = (function () {
     steps: steps, bossNotes: bossNotes, eternatusCases: eternatusCases, standardLine: standardLine, safeCapture: safeCapture,
     troubleshooting: troubleshooting, variants: variants, speedNotes: speedNotes, shopRules: shopRules, sources: sources,
     sturdyLine: sturdyLine, catching: catching, freeSlots: freeSlots,
-    STARTER_POINTS: 15, FINAL_WAVE: 5850
+    STARTER_POINTS: 15, FINAL_WAVE: 5850, SPEED_TARGET: 400000
   };
 })();
 
@@ -2195,10 +2200,31 @@ NZ.advisor = (function () {
   }
 
   /** Have/target rows for the four fusions and the bag. Manual counts fill in when nothing is synced. */
+  /**
+   * The goal while running: both speed Pokémon at kb.SPEED_TARGET by the end. Eggs and EXP Shares exist only to get
+   * them there, so a holder that is already there has no egg target left.
+   */
+  function speedGoal(ctx) {
+    var rows = [];
+    ["staller", "partner"].forEach(function (role) {
+      var m = ctx.assign.byRole[role];
+      if (!m || !m.stats.length) return;
+      var base = m.fusion ? data.fuse({ id: m.species, form: m.form }, m.fusion).stats[SPD] : data.form(m.species, m.form).stats[SPD];
+      var eff = data.natureEffect(m.nature);
+      var opts = { base: base, iv: m.ivs.length ? m.ivs[SPD] : 31, carbos: m.items.CARBOS || 0, soulDew: m.items.SOUL_DEW || 0, nature: eff && eff.up === SPD ? 1 : eff && eff.down === SPD ? -1 : 0 };
+      var need = adv.levelForSpeed(opts, kb.SPEED_TARGET);
+      rows.push({ role: role, name: m.name, speed: m.stats[SPD], level: m.level, need: need, levelsToGo: Math.max(0, need - m.level), done: m.stats[SPD] >= kb.SPEED_TARGET });
+    });
+    return { rows: rows, known: rows.length === 2, done: rows.length === 2 && rows.every(function (r) { return r.done; }),
+      shares: ctx.session ? (ctx.session.bag.EXP_SHARE || 0) : null };
+  }
+
   function itemAudit(ctx) {
     var out = { roles: [], bag: [], balls: null, synced: !!ctx.session };
+    var goal = speedGoal(ctx);
     ["staller", "runner", "partner", "killer"].forEach(function (role) {
       var m = ctx.assign.byRole[role], targets = kb.finalTeam[role].items, rows = [];
+      var fastEnough = goal.rows.some(function (g) { return g.role === role && g.done; });
       Object.keys(targets).forEach(function (key) {
         var target = targets[key], have, note = "";
         if (ctx.session) {
@@ -2211,7 +2237,9 @@ NZ.advisor = (function () {
         } else {
           have = (ctx.manual.items && ctx.manual.items[role + ":" + key]) || 0;
         }
-        rows.push({ key: key, name: kb.itemInfo[key].name, have: have, target: target, done: have >= target, note: note, why: kb.itemInfo[key].why });
+        var done = have >= target;
+        if (!done && fastEnough && (key === "LUCKY_EGG" || key === "GOLDEN_EGG")) { done = true; note = (note ? note + "; " : "") + "speed goal met"; }
+        rows.push({ key: key, name: kb.itemInfo[key].name, have: have, target: target, done: done, note: note, why: kb.itemInfo[key].why });
       });
       out.roles.push({ role: role, name: m ? m.name : kb.finalTeam[role].name, member: m || null, rows: rows });
     });
@@ -2295,6 +2323,7 @@ NZ.advisor = (function () {
   }
 
   NZ.advisor.makeContext = makeContext;
+  NZ.advisor.speedGoal = speedGoal;
   NZ.advisor.memberFor = memberFor;
   NZ.advisor.roleSpecies = roleSpecies;
   NZ.advisor.stepStatus = stepStatus;
@@ -2538,14 +2567,14 @@ NZ.advisor = (function () {
         keys.forEach(function (k) {
           var id = M(k);
           if (desc.exact && desc.moves.indexOf(id) !== -1) {
-            out.push({ kind: "learn", step: step.id, sure: true, text: "Knows " + data.mv(id).name + " right now: " + step.title + " for your " + roleName + ". Catch it and splice." });
+            out.push({ kind: "learn", step: step.id, sure: true, label: "knows " + data.mv(id).name, text: "Knows " + data.mv(id).name + " right now: " + step.title + " for your " + roleName + ". Catch it and splice." });
           } else if (ownMoves.indexOf(id) !== -1) {
             var lvl = data.knowsByLevel(desc.id, desc.form, id);
-            out.push({ kind: "learn", step: step.id, sure: false, rare: !!step.rare,
+            out.push({ kind: "learn", step: step.id, sure: false, rare: !!step.rare, label: data.mv(id).name + " carrier",
               text: (desc.exact ? "Does not know " + data.mv(id).name + " right now, but its species learns it (" + adv.lvlLabel(lvl) + "): fuse, then a Memory Mushroom gets it."
                 : "Its species learns " + data.mv(id).name + " (" + adv.lvlLabel(lvl) + "): " + step.title + " for your " + roleName + ". Check its moves after catching; a Memory Mushroom works once fused.") });
           } else if (data.canRelearn(desc.id, desc.form, id)) {
-            out.push({ kind: "learn", step: step.id, sure: false, text: "An earlier stage learns " + data.mv(id).name + ": once fused, a Memory Mushroom can pull it (" + step.title + ")." });
+            out.push({ kind: "learn", step: step.id, sure: false, label: data.mv(id).name + " by Memory Mushroom", text: "An earlier stage learns " + data.mv(id).name + ": once fused, a Memory Mushroom can pull it (" + step.title + ")." });
           }
         });
       } else if (step.kind === "carbos") {
@@ -2555,7 +2584,7 @@ NZ.advisor = (function () {
           var where = (holder ? holder.name : roleName) + (eff.auto.progress ? " (" + eff.auto.progress[0] + " of " + eff.auto.progress[1] + ")" : "");
           var prior = out.filter(function (o) { return o.kind === "carbos"; })[0];
           if (prior) { prior.text = prior.text.replace(/ and unfuse\.$/, "") + ", or " + where + ", and unfuse."; }
-          else out.push({ kind: "carbos", step: step.id, sure: true, text: "Holds " + n + " Carbos: catch it, fuse it onto " + where + " and unfuse." });
+          else out.push({ kind: "carbos", step: step.id, sure: true, label: n + " Carbos", text: "Holds " + n + " Carbos: catch it, fuse it onto " + where + " and unfuse." });
         }
       } else if (step.kind === "fuse" && step.need !== "normalize") {
         var wantSet = step.need === "sturdy" ? "sturdy" : "lure";
@@ -2569,7 +2598,7 @@ NZ.advisor = (function () {
             out.push({ kind: "fuse", step: step.id, sure: false, weak: true, text: (desc.exact ? "Has " : "Can have ") + data.ab(a).name + ", but the fusion would be " + adv.typeNames(fz) + ": sandstorm still chips it." });
             return;
           }
-          out.push({ kind: "fuse", step: step.id, sure: desc.exact,
+          out.push({ kind: "fuse", step: step.id, sure: desc.exact, label: data.ab(a).name + " partner",
             text: (desc.exact ? "Has " + data.ab(a).name : "Can have " + data.ab(a).name + (hidden ? " (hidden ability; check after catching)" : " (check which ability it has)")) +
               ": partner for " + step.title.replace(" (keep fused)", "") + " → " + adv.typeNames(fz) + "." });
         });
@@ -2607,10 +2636,10 @@ NZ.advisor = (function () {
     var haveTailwind = extras.some(function (m) { return m.ability === A("PRANKSTER") && m.moves.indexOf(M("TAILWIND")) !== -1; });
     var haveBreaker = extras.some(function (m) { return data.aIn("moldBreaker", m.ability); });
     if (!haveTailwind && desc.abilities.indexOf(A("PRANKSTER")) !== -1 && data.canRelearn(desc.id, desc.form, M("TAILWIND"))) {
-      out.push({ kind: "free", sure: desc.exact, text: (desc.exact ? "Prankster" : "Can have Prankster") + " and learns Tailwind: the free-slot answer to a fast Eternatus." });
+      out.push({ kind: "free", sure: desc.exact, label: "Prankster Tailwind", text: (desc.exact ? "Prankster" : "Can have Prankster") + " and learns Tailwind: the free-slot answer to a fast Eternatus." });
     }
     if (!haveBreaker && desc.abilities.some(function (a) { return data.aIn("moldBreaker", a); })) {
-      out.push({ kind: "free", sure: desc.exact, text: (desc.exact ? "Has " : "Can have ") + names(desc.abilities.filter(function (a) { return data.aIn("moldBreaker", a); }), data.ab) + ": body for the Mold Breaker + Gastro Acid free slot." });
+      out.push({ kind: "free", sure: desc.exact, label: "Mold Breaker body", text: (desc.exact ? "Has " : "Can have ") + names(desc.abilities.filter(function (a) { return data.aIn("moldBreaker", a); }), data.ab) + ": body for the Mold Breaker + Gastro Acid free slot." });
     }
     return out;
   }
@@ -2633,32 +2662,35 @@ NZ.advisor = (function () {
   /**
    * Everything worth saying about one wild Pokémon on the current wave.
    * phase: "carry" or "run". Uses exact ability and moves only when ctx.peek is on.
+   * Each alert is { sev, text, advice, label, want }: `text` is the fact, `advice` what to do about it (teaching, shown
+   * once on the foe card), `label` a few words for the verdict line.
    */
   function scanEnemy(enemy, ctx, phase) {
     var exact = !!ctx.peek;
     var desc = describe(enemy, exact);
     var alerts = [];
-    if (!desc) return { desc: null, alerts: [{ sev: "info", text: "Unknown species #" + enemy.species + " (newer than this page's game data).", want: false }], wanted: false, steal: false, gas: "no" };
-    function add(sev, text, want) { alerts.push({ sev: sev, text: text, want: !!want }); }
+    if (!desc) return { desc: null, alerts: [{ sev: "info", text: "Unknown species #" + enemy.species + " (newer than this page's game data).", advice: "", label: "unknown species", want: false }], wanted: false, steal: false, gas: "no" };
+    function add(sev, text, want, label, advice) { alerts.push({ sev: sev, text: text, advice: advice || "", label: label || text, want: !!want }); }
 
-    if (enemy.shiny) add("shiny", "Shiny" + (enemy.variant ? " (tier " + (enemy.variant + 1) + ")" : "") + ". Master Ball it, or use the safe-capture steps.", true);
+    var tier = enemy.shiny && enemy.variant ? " (tier " + (enemy.variant + 1) + ")" : "";
+    if (enemy.shiny) add("shiny", "Shiny" + tier + ".", true, "shiny" + tier, "Master Ball it, or use the safe-capture steps.");
     if (ctx.system && data.sp(enemy.species)) {
       var caught = ctx.system.caught.indexOf(enemy.species) !== -1;
-      if (!caught) add("want", data.sp(enemy.species).n + " is not in your dex yet.", true);
-      else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex. Catch it.", true);
-      else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true);
+      if (!caught) add("want", data.sp(enemy.species).n + " is not in your dex yet.", true, "not in your dex");
+      else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex.", true, "new to your dex", "Catch it.");
+      else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true, "shiny you do not own");
     }
     var matches = scout(enemy, ctx, exact);
     matches.forEach(function (m) {
       if (m.weak) return;
-      add(m.sure ? "want" : "maybe", m.text, m.sure || m.kind === "carbos" || !!m.rare);
+      add(m.sure ? "want" : "maybe", m.text, m.sure || m.kind === "carbos" || !!m.rare, m.label);
     });
     var forcedWave = ctx.session ? adv.waveInfo(ctx.session.wave).forced : false;
     wantedItems(enemy, ctx).forEach(function (it) {
-      add("item", "Holds " + it.count + " × " + it.name + ", which you are still short of. " +
-        (forcedWave ? "Mini Black Hole takes one item a turn while you fight; Thief works too." : "Thief or Mini Black Hole it, or catch it."), phase === "run" && !forcedWave);
+      add("item", "Holds " + it.count + " × " + it.name + ", which you are still short of.", phase === "run" && !forcedWave, it.count + " × " + it.name,
+        forcedWave ? "Mini Black Hole takes one item a turn while you fight; Thief works too." : "Thief or Mini Black Hole it, or catch it.");
     });
-    if (phase === "run") freeSlotMatches(desc, ctx).forEach(function (m) { add(m.sure ? "want" : "maybe", m.text, m.sure); });
+    if (phase === "run") freeSlotMatches(desc, ctx).forEach(function (m) { add(m.sure ? "want" : "maybe", m.text, m.sure, m.label); });
 
     // Neutralizing Gas: the one thing that changes how you leave
     var gas = "no";
@@ -2684,13 +2716,18 @@ NZ.advisor = (function () {
     var runnerOut = runnerIdx !== -1 && runnerIdx < fieldSlots && runner.hp > 0;
     var runAway = !!runner && runner.passiveOn && runner.passive === A("RUN_AWAY") || (!!runner && runner.ability === A("RUN_AWAY"));
     var notes = [];
+    // the lure chain is guaranteed while running, as long as Gouot ends every battle on the field (BattleScene.getDoubleBattleChance)
+    var warnings = [], staller = ctx.assign.byRole.staller;
+    if (staller && s.party.indexOf(staller) !== 0) warnings.push({ title: staller.name + " is not in slot 1", text: "The double-battle roll uses whoever is on the field when the battle ends. Keep " + staller.name + " first so every wave, forced bosses included, rolls with its two lures." });
+    // memberLures already returns nothing for a fainted Pokémon, so the faint itself is the warning
+    adv.lureStatus(s).field.forEach(function (f) { if (f.fainted) warnings.push({ title: f.member.name + " is fainted", text: "A fainted Pokémon's lures do not count. Revive it before the battle ends." }); });
     if (info.forced) {
-      return { action: "boss", title: adv.kindLabel(info.kind), info: info, scans: scans, notes: ["No fleeing and no catching on this wave. Gouot must be on the field when it ends."], reasons: [], catches: [], steals: [] };
+      return { action: "boss", title: adv.kindLabel(info.kind), info: info, scans: scans, notes: ["No fleeing and no catching on this wave. Gouot must be on the field when it ends."], reasons: [], catches: [], steals: [], warnings: warnings };
     }
     var catches = [], steals = [];
     scans.forEach(function (sc, i) {
       sc.alerts.forEach(function (a) {
-        if (a.want) (a.sev === "item" ? steals : catches).push({ who: s.enemies[i].name, text: a.text, sev: a.sev });
+        if (a.want) (a.sev === "item" ? steals : catches).push({ who: s.enemies[i].name, text: a.text, label: a.label, sev: a.sev });
       });
     });
     var gasYes = scans.some(function (sc) { return sc.gas === "yes"; });
@@ -2705,7 +2742,7 @@ NZ.advisor = (function () {
     if (gasYes) notes.unshift("Neutralizing Gas is out: your lures and Run Away are off. " + (action === "stay" ? "Gastro Acid that Pokémon before anything else." : "Teddiurk uses Gastro Acid on it, then runs next turn."));
     else if (gasMaybe) notes.unshift("One of these can have Neutralizing Gas. If the game announces it" + (busy ? ", Gastro Acid that Pokémon first." : ": Gastro Acid, then run."));
     var title = { stay: "Stay", steal: "Steal, then run", gastro: "Gastro Acid, then run", run: "Run" }[action];
-    return { action: action, title: title, info: info, scans: scans, reasons: catches.concat(steals), catches: catches, steals: steals, notes: notes };
+    return { action: action, title: title, info: info, scans: scans, reasons: catches.concat(steals), catches: catches, steals: steals, notes: notes, warnings: warnings };
   }
 
   NZ.advisor.describe = describe;
@@ -3183,7 +3220,7 @@ NZ.ui = (function () {
     var items = itemList(enemy.items);
     var alerts = scan.alerts.map(function (a) {
       var p = ALERT_PILL[a.sev] || ALERT_PILL.info;
-      return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + "</span></li>";
+      return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + (a.advice ? " " + H.teach(h(a.advice), "", "span") : "") + "</span></li>";
     }).join("");
     return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
       (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") +
@@ -3223,14 +3260,13 @@ NZ.ui = (function () {
       body += '<div class="slots">' + slots + "</div>" +
         '<dl class="kv"><dt>Lure sources</dt><dd class="num">' + ls.count + " (" + ls.sources.length + " on the field, " + ls.items.length + " item" + (ls.items.length === 1 ? "" : "s") + ")</dd><dt>Bag</dt><dd>" + itemTxt +
         "</dd><dt>Wave " + util.fmt(next) + "</dt><dd>" + nextText + "</dd><dt>At this count</dt><dd>normal waves " + odds(ls.normalChance) + ", X0 waves " + odds(ls.x0Chance) + "</dd></dl>";
-      var staller = ctx.assign.byRole.staller;
-      if (phase === "run" && staller && ctx.session.party.indexOf(staller) !== 0) body += H.callout("warn", staller.name + " is not in slot 1", "The lure roll uses the Pokémon on the field when the battle ends. Keep " + h(staller.name) + " first so it is out after every wave, forced bosses included.");
-      if (ls.field.some(function (f) { return f.fainted && f.lures.length === 0; }) || ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
+      if (ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
     } else {
       body += H.teach("Each lure source on the field when a battle ends divides the odds by 4: a lure ability, a lure passive, or a lure item tier in the bag. The roll uses slot 1, plus slot 2 after a double.", "note") +
         '<div class="table-wrap"><table><thead><tr><th>Sources</th><th>Normal wave</th><th>X0 wave</th></tr></thead><tbody>' +
         [0, 1, 2, 3].map(function (n) { return '<tr><th class="num">' + n + "</th><td>" + odds(adv.doubleChance(1, n)) + "</td><td>" + odds(adv.doubleChance(10, n)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
     }
+    // the Running tab has no lure panel: once both fusions are out every wave is a double, and the verdict warns when Gouot is not in slot 1
     if (phase === "carry") {
       body += '<ul class="bullets teach"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
     } else {
@@ -3472,17 +3508,19 @@ NZ.ui = (function () {
       var v = adv.verdict(ctx);
       var cls = { boss: "boss", stay: "stay", steal: "steal", gastro: "gastro" }[v.action] || "run";
       var call = v.action === "boss" ? "Boss fight" : v.title;
+      // one short line per reason; the foe card below carries the full alert and its advice
       var reasons = v.reasons.length ? '<ul class="alerts">' + v.reasons.map(function (r) {
         var p = REASON_PILL[r.sev] || REASON_PILL.want;
-        return '<li class="alert">' + H.pill(p[0], p[1]) + "<span><strong>" + h(r.who) + ".</strong> " + h(r.text) + "</span></li>";
+        return '<li class="alert">' + H.pill(p[0], p[1]) + "<span><strong>" + h(r.who) + "</strong> · " + h(r.label) + "</span></li>";
       }).join("") + "</ul>" : "";
       var notes = v.notes.map(function (n) { return "<li>" + h(n) + "</li>"; }).join("");
+      var warnings = (v.warnings || []).map(function (w) { return H.callout("warn", w.title, h(w.text)); }).join("");
       var foes = s.enemies.map(function (e, i) { return F.foeCard(e, v.scans[i], ctx); }).join("");
       var sub = { run: "Nothing here for you. Teddiurk runs.", stay: "Something on this wave is worth the turns.", boss: "See the boss desk below for this fight.",
         steal: "Nothing to catch, but there are items you are short of. Thief takes the best item first (30 % a hit, three hits with two Multi Lens); then Teddiurk runs.",
         gastro: v.steals.length ? "There are items to take once the gas is off." : "" }[v.action] || "";
       return H.panel("This wave", F.waveLine(s) + '<div class="verdict ' + cls + '"><div class="verdict-call">' + h(call) + "</div>" + (sub ? H.teach(h(sub), "", "div") : "") + reasons +
-        (notes ? '<ul class="bullets">' + notes + "</ul>" : "") + '</div><div class="foes">' + foes + "</div>", "synced " + h(util.ago(ui.game.at)));
+        (notes ? '<ul class="bullets">' + notes + "</ul>" : "") + "</div>" + warnings + '<div class="foes">' + foes + "</div>", "synced " + h(util.ago(ui.game.at)));
     }
     var r = ui.state.run, info = adv.waveInfo(r.wave);
     var action = info.forced ? "boss" : r.want ? "stay" : r.gas ? "gastro" : "run";
@@ -3599,12 +3637,26 @@ NZ.ui = (function () {
 
   function speedCard(label, base, opts, actual) {
     var now = actual != null ? actual : adv.speedStat({ base: base, iv: opts.iv, level: opts.level, carbos: opts.carbos, soulDew: opts.soulDew, nature: opts.nature });
-    var need = adv.levelForSpeed({ base: base, iv: opts.iv, carbos: opts.carbos, soulDew: opts.soulDew, nature: opts.nature }, 400000);
+    var need = adv.levelForSpeed({ base: base, iv: opts.iv, carbos: opts.carbos, soulDew: opts.soulDew, nature: opts.nature }, kb.SPEED_TARGET);
     var nature = opts.nature > 0 ? "+Speed nature" : opts.nature < 0 ? "−Speed nature" : "neutral Speed nature";
     var gap = need > opts.level ? util.fmt(need - opts.level) + " levels to go" : "reached";
-    return '<div class="slot"><span class="slot-n">base ' + base + " · " + nature + "</span><strong>" + h(label) + '</strong><div class="big-odds num">' + util.short(now) + ' <span class="unit">Speed</span></div>' +
+    return '<div class="slot' + (need > opts.level ? "" : " done") + '"><span class="slot-n">base ' + base + " · " + nature + "</span><strong>" + h(label) + '</strong><div class="big-odds num">' + util.short(now) + ' <span class="unit">Speed</span></div>' +
       '<dl class="kv tight"><dt>Level</dt><dd class="num">' + util.fmt(opts.level) + '</dd><dt>Carbos</dt><dd class="num">' + opts.carbos + (opts.iv < 31 ? " of " + opts.iv + " (Speed IV)" : " of 31") +
-      '</dd><dt>Soul Dew</dt><dd class="num">' + opts.soulDew + ' of 10</dd></dl><div class="sub">400k Speed at level <span class="num">' + util.fmt(need) + "</span>: " + gap + ".</div></div>";
+      '</dd><dt>Soul Dew</dt><dd class="num">' + opts.soulDew + ' of 10</dd></dl><div class="sub">' + util.short(kb.SPEED_TARGET) + ' Speed at level <span class="num">' + util.fmt(need) + "</span>: " + gap + ".</div></div>";
+  }
+
+  /** The one thing that matters while running: are both speed Pokémon on course, and is anything feeding the one on the bench? */
+  function goalCallout(ctx) {
+    var g = adv.speedGoal(ctx);
+    if (!g.known) return "";
+    if (g.done) return H.callout("good", "Both have " + util.short(kb.SPEED_TARGET) + " Speed", "The eggs have done their job: Lucky and Golden Eggs are no longer targets, and EXP no longer matters. Take whatever else the shop offers.");
+    var parts = g.rows.map(function (r) { return r.done ? h(r.name) + " is there" : h(r.name) + ": <span class=\"num\">" + util.fmt(r.levelsToGo) + "</span> levels to go"; });
+    var partner = g.rows.filter(function (r) { return r.role === "partner"; })[0];
+    var shares = g.shares == null ? "" : g.shares < 5
+      ? " EXP Share <span class=\"num\">" + g.shares + " of 5</span>: " + (partner ? h(partner.name) : "the partner") + " gets " + (g.shares * 10) + " % of each catch from the bench" + (g.shares ? "" : ", so it is not levelling at all") + "."
+      : "";
+    return H.callout(g.shares != null && g.shares < 5 ? "warn" : "plain", "The goal while running", parts.join(". ") + "." + shares + " " +
+      H.teach("Levels come from catches, multiplied by eggs; a Pokémon that sat out the battle earns nothing without EXP Shares.", "", "span"));
   }
 
   function speedPanel(ctx) {
@@ -3627,8 +3679,8 @@ NZ.ui = (function () {
     var controls = fromSave ? "" : '<div class="row"><label class="field" for="sp-level">Level<input type="number" id="sp-level" min="1" max="200000" data-bind="speed.level" value="' + sp.level + '"></label>' +
       '<label class="field" for="sp-carbos">Carbos<input type="number" id="sp-carbos" min="0" max="31" data-bind="speed.carbos" value="' + sp.carbos + '"></label>' +
       '<label class="field" for="sp-dew">Soul Dew<input type="number" id="sp-dew" min="0" max="10" data-bind="speed.soulDew" value="' + sp.soulDew + '"></label></div>';
-    return H.panel("Speed and levels", controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
-      fromSave ? "from your save" : "what-if calculator");
+    return H.panel("Speed and levels", (fromSave ? goalCallout(ctx) : "") + controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
+      fromSave ? "the goal while running, from your save" : "what-if calculator", ' id="speed-panel"');
   }
 
   function freePanel(ctx) {
@@ -3663,8 +3715,8 @@ NZ.ui = (function () {
   ui.views.run = function (ctx) {
     var r = adv.readiness(ctx);
     var warn = ctx.session && !r.ready ? H.callout("warn", "Your synced team is not ready to run yet", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
-    return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run.</p></div>' + warn +
-      '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel() + troublePanel() + '</div><div class="col">' + positionPanel(ctx) + F.lurePanel(ctx, "run") + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + speedPanel(ctx) + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
+    return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run. The goal from here is Speed: ' + util.fmt(kb.SPEED_TARGET) + ' on both Gouot and Jynxgigas by the end.</p></div>' + warn +
+      '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel() + troublePanel() + '</div><div class="col">' + speedPanel(ctx) + positionPanel(ctx) + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
   };
 
   ui.on("wave-next", function () {

@@ -35,7 +35,7 @@
     var items = itemList(enemy.items);
     var alerts = scan.alerts.map(function (a) {
       var p = ALERT_PILL[a.sev] || ALERT_PILL.info;
-      return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + "</span></li>";
+      return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + (a.advice ? " " + H.teach(h(a.advice), "", "span") : "") + "</span></li>";
     }).join("");
     return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
       (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") +
@@ -75,14 +75,13 @@
       body += '<div class="slots">' + slots + "</div>" +
         '<dl class="kv"><dt>Lure sources</dt><dd class="num">' + ls.count + " (" + ls.sources.length + " on the field, " + ls.items.length + " item" + (ls.items.length === 1 ? "" : "s") + ")</dd><dt>Bag</dt><dd>" + itemTxt +
         "</dd><dt>Wave " + util.fmt(next) + "</dt><dd>" + nextText + "</dd><dt>At this count</dt><dd>normal waves " + odds(ls.normalChance) + ", X0 waves " + odds(ls.x0Chance) + "</dd></dl>";
-      var staller = ctx.assign.byRole.staller;
-      if (phase === "run" && staller && ctx.session.party.indexOf(staller) !== 0) body += H.callout("warn", staller.name + " is not in slot 1", "The lure roll uses the Pokémon on the field when the battle ends. Keep " + h(staller.name) + " first so it is out after every wave, forced bosses included.");
-      if (ls.field.some(function (f) { return f.fainted && f.lures.length === 0; }) || ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
+      if (ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
     } else {
       body += H.teach("Each lure source on the field when a battle ends divides the odds by 4: a lure ability, a lure passive, or a lure item tier in the bag. The roll uses slot 1, plus slot 2 after a double.", "note") +
         '<div class="table-wrap"><table><thead><tr><th>Sources</th><th>Normal wave</th><th>X0 wave</th></tr></thead><tbody>' +
         [0, 1, 2, 3].map(function (n) { return '<tr><th class="num">' + n + "</th><td>" + odds(adv.doubleChance(1, n)) + "</td><td>" + odds(adv.doubleChance(10, n)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
     }
+    // the Running tab has no lure panel: once both fusions are out every wave is a double, and the verdict warns when Gouot is not in slot 1
     if (phase === "carry") {
       body += '<ul class="bullets teach"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
     } else {

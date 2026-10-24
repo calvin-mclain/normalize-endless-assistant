@@ -21,17 +21,19 @@
       var v = adv.verdict(ctx);
       var cls = { boss: "boss", stay: "stay", steal: "steal", gastro: "gastro" }[v.action] || "run";
       var call = v.action === "boss" ? "Boss fight" : v.title;
+      // one short line per reason; the foe card below carries the full alert and its advice
       var reasons = v.reasons.length ? '<ul class="alerts">' + v.reasons.map(function (r) {
         var p = REASON_PILL[r.sev] || REASON_PILL.want;
-        return '<li class="alert">' + H.pill(p[0], p[1]) + "<span><strong>" + h(r.who) + ".</strong> " + h(r.text) + "</span></li>";
+        return '<li class="alert">' + H.pill(p[0], p[1]) + "<span><strong>" + h(r.who) + "</strong> · " + h(r.label) + "</span></li>";
       }).join("") + "</ul>" : "";
       var notes = v.notes.map(function (n) { return "<li>" + h(n) + "</li>"; }).join("");
+      var warnings = (v.warnings || []).map(function (w) { return H.callout("warn", w.title, h(w.text)); }).join("");
       var foes = s.enemies.map(function (e, i) { return F.foeCard(e, v.scans[i], ctx); }).join("");
       var sub = { run: "Nothing here for you. Teddiurk runs.", stay: "Something on this wave is worth the turns.", boss: "See the boss desk below for this fight.",
         steal: "Nothing to catch, but there are items you are short of. Thief takes the best item first (30 % a hit, three hits with two Multi Lens); then Teddiurk runs.",
         gastro: v.steals.length ? "There are items to take once the gas is off." : "" }[v.action] || "";
       return H.panel("This wave", F.waveLine(s) + '<div class="verdict ' + cls + '"><div class="verdict-call">' + h(call) + "</div>" + (sub ? H.teach(h(sub), "", "div") : "") + reasons +
-        (notes ? '<ul class="bullets">' + notes + "</ul>" : "") + '</div><div class="foes">' + foes + "</div>", "synced " + h(util.ago(ui.game.at)));
+        (notes ? '<ul class="bullets">' + notes + "</ul>" : "") + "</div>" + warnings + '<div class="foes">' + foes + "</div>", "synced " + h(util.ago(ui.game.at)));
     }
     var r = ui.state.run, info = adv.waveInfo(r.wave);
     var action = info.forced ? "boss" : r.want ? "stay" : r.gas ? "gastro" : "run";
@@ -148,12 +150,26 @@
 
   function speedCard(label, base, opts, actual) {
     var now = actual != null ? actual : adv.speedStat({ base: base, iv: opts.iv, level: opts.level, carbos: opts.carbos, soulDew: opts.soulDew, nature: opts.nature });
-    var need = adv.levelForSpeed({ base: base, iv: opts.iv, carbos: opts.carbos, soulDew: opts.soulDew, nature: opts.nature }, 400000);
+    var need = adv.levelForSpeed({ base: base, iv: opts.iv, carbos: opts.carbos, soulDew: opts.soulDew, nature: opts.nature }, kb.SPEED_TARGET);
     var nature = opts.nature > 0 ? "+Speed nature" : opts.nature < 0 ? "−Speed nature" : "neutral Speed nature";
     var gap = need > opts.level ? util.fmt(need - opts.level) + " levels to go" : "reached";
-    return '<div class="slot"><span class="slot-n">base ' + base + " · " + nature + "</span><strong>" + h(label) + '</strong><div class="big-odds num">' + util.short(now) + ' <span class="unit">Speed</span></div>' +
+    return '<div class="slot' + (need > opts.level ? "" : " done") + '"><span class="slot-n">base ' + base + " · " + nature + "</span><strong>" + h(label) + '</strong><div class="big-odds num">' + util.short(now) + ' <span class="unit">Speed</span></div>' +
       '<dl class="kv tight"><dt>Level</dt><dd class="num">' + util.fmt(opts.level) + '</dd><dt>Carbos</dt><dd class="num">' + opts.carbos + (opts.iv < 31 ? " of " + opts.iv + " (Speed IV)" : " of 31") +
-      '</dd><dt>Soul Dew</dt><dd class="num">' + opts.soulDew + ' of 10</dd></dl><div class="sub">400k Speed at level <span class="num">' + util.fmt(need) + "</span>: " + gap + ".</div></div>";
+      '</dd><dt>Soul Dew</dt><dd class="num">' + opts.soulDew + ' of 10</dd></dl><div class="sub">' + util.short(kb.SPEED_TARGET) + ' Speed at level <span class="num">' + util.fmt(need) + "</span>: " + gap + ".</div></div>";
+  }
+
+  /** The one thing that matters while running: are both speed Pokémon on course, and is anything feeding the one on the bench? */
+  function goalCallout(ctx) {
+    var g = adv.speedGoal(ctx);
+    if (!g.known) return "";
+    if (g.done) return H.callout("good", "Both have " + util.short(kb.SPEED_TARGET) + " Speed", "The eggs have done their job: Lucky and Golden Eggs are no longer targets, and EXP no longer matters. Take whatever else the shop offers.");
+    var parts = g.rows.map(function (r) { return r.done ? h(r.name) + " is there" : h(r.name) + ": <span class=\"num\">" + util.fmt(r.levelsToGo) + "</span> levels to go"; });
+    var partner = g.rows.filter(function (r) { return r.role === "partner"; })[0];
+    var shares = g.shares == null ? "" : g.shares < 5
+      ? " EXP Share <span class=\"num\">" + g.shares + " of 5</span>: " + (partner ? h(partner.name) : "the partner") + " gets " + (g.shares * 10) + " % of each catch from the bench" + (g.shares ? "" : ", so it is not levelling at all") + "."
+      : "";
+    return H.callout(g.shares != null && g.shares < 5 ? "warn" : "plain", "The goal while running", parts.join(". ") + "." + shares + " " +
+      H.teach("Levels come from catches, multiplied by eggs; a Pokémon that sat out the battle earns nothing without EXP Shares.", "", "span"));
   }
 
   function speedPanel(ctx) {
@@ -176,8 +192,8 @@
     var controls = fromSave ? "" : '<div class="row"><label class="field" for="sp-level">Level<input type="number" id="sp-level" min="1" max="200000" data-bind="speed.level" value="' + sp.level + '"></label>' +
       '<label class="field" for="sp-carbos">Carbos<input type="number" id="sp-carbos" min="0" max="31" data-bind="speed.carbos" value="' + sp.carbos + '"></label>' +
       '<label class="field" for="sp-dew">Soul Dew<input type="number" id="sp-dew" min="0" max="10" data-bind="speed.soulDew" value="' + sp.soulDew + '"></label></div>';
-    return H.panel("Speed and levels", controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
-      fromSave ? "from your save" : "what-if calculator");
+    return H.panel("Speed and levels", (fromSave ? goalCallout(ctx) : "") + controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
+      fromSave ? "the goal while running, from your save" : "what-if calculator", ' id="speed-panel"');
   }
 
   function freePanel(ctx) {
@@ -212,8 +228,8 @@
   ui.views.run = function (ctx) {
     var r = adv.readiness(ctx);
     var warn = ctx.session && !r.ready ? H.callout("warn", "Your synced team is not ready to run yet", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
-    return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run.</p></div>' + warn +
-      '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel() + troublePanel() + '</div><div class="col">' + positionPanel(ctx) + F.lurePanel(ctx, "run") + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + speedPanel(ctx) + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
+    return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run. The goal from here is Speed: ' + util.fmt(kb.SPEED_TARGET) + ' on both Gouot and Jynxgigas by the end.</p></div>' + warn +
+      '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel() + troublePanel() + '</div><div class="col">' + speedPanel(ctx) + positionPanel(ctx) + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
   };
 
   ui.on("wave-next", function () {
