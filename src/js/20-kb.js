@@ -47,7 +47,7 @@ NZ.kb = (function () {
     },
     staller: {
       passiveSet: "lure", passiveWhy: "A lure passive plus a lure ability later is what makes every wave a double.",
-      form: 0, formWhy: "Only Average Size has Illuminate.",
+      form: 0, formWhy: "Only the Medium Variety (the game called it Average Size until 1.12.2) has Illuminate.",
       ability: ["PICKUP", "FRISK"], abilityOptional: true, abilityWhy: "Pickup for early items; Frisk shows wild abilities without catching.",
       speedNature: true, natureWhy: "Jolly or Timid: this is one of the two speed-invested Pokémon.",
       levelMoves: ["TRICK_OR_TREAT"], levelWhy: "Trick-or-Treat is why this build needs the Pumpkaboo line.",

@@ -22,6 +22,10 @@
       body = '<dl class="kv">' + rows + '</dl><div class="row"><button type="button" class="btn small" data-act="forget">Forget synced data</button></div>';
     }
     if (bridge.status.lastError) body += H.callout("danger", "Last attempt failed", h(bridge.status.lastError));
+    ui.visibleEvents().forEach(function (e) {
+      body += H.callout("plain", e.n + " event, " + ui.dayLabel(e.from) + " to " + ui.dayLabel(e.to), h(ui.eventLine(e)) +
+        H.teach(" The game sets these from the date (UTC). A shiny or a new form on the field still shows as worth catching the usual way.", "sub", "span"));
+    });
     return H.panel("Status", body, "");
   }
 

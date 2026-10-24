@@ -164,11 +164,30 @@ NZ.ui = (function () {
     return { cls: live ? "live" : "stale", text: (live ? "Live · " : "") + bit + (live ? "" : " · " + util.ago(game.at)) };
   }
 
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function dayLabel(iso) { var d = new Date(iso + "T00:00:00Z"); return d.getUTCDate() + " " + MONTHS[d.getUTCMonth()]; }
+  /** Events that change something an Endless run sees (shiny odds, candy, luck, biome links, extra wild species). */
+  function visibleEvents(day) {
+    return data.activeEvents(day).filter(function (e) { return e.shiny || e.candy || e.luck || e.biomes || e.sp || e.fusions; });
+  }
+  /** One line of state for an event: what it changes, for the bar and the Sync tab. */
+  function eventLine(e) {
+    var bits = [];
+    if (e.shiny) bits.push("shiny odds ×" + e.shiny);
+    if (e.luck) bits.push("+" + e.luck + " luck");
+    if (e.candy) bits.push("+" + e.candy + " candy per catch");
+    if (e.fusions) bits.push("more fusion items");
+    if (e.biomes) bits.push(Object.keys(e.biomes).map(function (b) { return data.biomeName(+b) + " leads to " + e.biomes[b].map(function (t) { return data.biomeName(t); }).join(" or "); }).join(", "));
+    if (e.sp) bits.push(e.sp.length + " event species can show up in any biome");
+    return bits.join(" · ");
+  }
+
   function renderBar(ctx) {
     var detected = adv.detectPhase(ctx);
+    var events = visibleEvents();
     var tabs = [["party", "Party building", "Party"], ["carry", "Carry", "Carry"], ["run", "Running", "Running"]];
     var html = '<div class="bar-in"><div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><div class="brand-name">Normalize Assistant</div>' +
-      '<div class="brand-sub">Entrainment endless build · PokéRogue ' + h(data.meta.version) + ' data</div></div></div><nav class="phases" role="tablist" aria-label="Phases">';
+      '<div class="brand-sub">Entrainment endless build · PokéRogue ' + h(data.meta.version) + ' data' + events.map(function (e) { return " · " + h(e.n) + " event until " + dayLabel(e.to); }).join("") + '</div></div></div><nav class="phases" role="tablist" aria-label="Phases">';
     tabs.forEach(function (t, i) {
       html += '<button type="button" class="phase-btn" role="tab" id="tab-' + t[0] + '" aria-selected="' + (state.tab === t[0]) + '" data-act="tab" data-tab="' + t[0] + '"><span class="n">' + (i + 1) +
         '</span><span class="phase-label"><span class="long">' + t[1] + '</span><span class="short">' + t[2] + "</span></span>" + (detected === t[0] ? '<span class="here" title="Your synced save is in this phase"></span>' : "") + "</button>";
@@ -315,6 +334,7 @@ NZ.ui = (function () {
     setTab: setTab, setDensity: setDensity, hintCompact: hintCompact, compact: compact, toast: toast, getPath: getPath, setPath: setPath,
     html: { typeChips: typeChips, ab: ab, pill: pill, moveChip: moveChip, monChip: monChip, mark: mark, segbar: segbar,
       details: details, panel: panel, callout: callout, stepper: stepper, monHead: monHead, teach: teach },
+    visibleEvents: visibleEvents, eventLine: eventLine, dayLabel: dayLabel,
     resetGame: function () { game.session = null; game.system = null; game.at = 0; game.via = ""; game.sample = false; },
     resetState: function () { state = defaultState(); }
   };

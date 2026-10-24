@@ -62,4 +62,13 @@ assert.deepEqual(d.learners(M.MAT_BLOCK).map(l => d.sp(l.id).k).sort(), ["BATTLE
 assert.ok(d.withAbility(A.NORMALIZE).every(r => ["SKITTY", "DELCATTY", "REGIGIGAS"].includes(d.sp(r.id).k)));
 assert.deepEqual(d.startersWithPassive(A.ILLUMINATE).map(r => d.sp(r.id).k), ["PUMPKABOO"]);
 assert.equal(d.search("yama")[0].name, "Yamask");
+// timed events (src/data/balance/timed-events.ts): active from the start date up to, not including, the end date (UTC)
+const halloween = d.activeEvents("2026-10-30").find(e => e.n === "Halloween 26");
+assert.ok(halloween, "Halloween 26 runs on 30 Oct 2026");
+assert.equal(halloween.shiny, 2); assert.equal(halloween.candy, 1);
+assert.deepEqual(halloween.biomes, { 3: [19], 4: [19] }, "Tall Grass and Metropolis lead to Graveyard");
+assert.ok(halloween.sp.includes(S.PUMPKABOO) && halloween.sp.includes(S.ROARING_MOON));
+assert.ok(d.activeEvents("2026-10-23").some(e => e.n === "Halloween 26"), "starts on its first day");
+assert.ok(!d.activeEvents("2026-11-09").some(e => e.n === "Halloween 26"), "over on its end date");
+assert.ok(!d.activeEvents("2026-10-22").some(e => e.n === "Halloween 26"));
 console.log("data tests passed");
