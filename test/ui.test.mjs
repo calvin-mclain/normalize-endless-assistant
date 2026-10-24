@@ -614,12 +614,10 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     const newer = structuredClone(plainRaw); newer.timestamp = Date.now();
     await seed.evaluate(s => localStorage.setItem("sessionData_Tester", s), encryptPrsv(JSON.stringify(newer)));
     await page.waitForFunction(() => /Live · Wave 1,764/.test(document.querySelector("#tab-sync").innerText), null, { timeout: 4000 });
-    // nothing for the dex, but the unlock save has bought no cost reductions: the softer candy call, with the shortfall on the card
-    assert.equal(await text(page, ".verdict-call"), "Catch for candy, or run");
-    assert.equal(await page.locator(".foe.candy").count(), 2);
-    assert.match(await page.locator(".foe.candy .pill.candy").first().innerText(), /candy/i);
-    assert.match(await page.locator(".verdict .alert").first().innerText(), /Raticate\.\s+Rattata: 2 unlocks left \(next: first cost reduction, 25 candies\), 0 candies banked, 25 short; this catch gives 1\./);
-    assert.match(await text(page, ".verdict"), /Catch Raticate first: both have 2 unlocks left, and Rattata has fewer candies|Both are worth catching\. Catch Raticate first\. Remove/);
+    assert.equal(await text(page, ".verdict-call"), "Run");
+    // the unlock save has bought no cost reductions: each card states what its starter still needs
+    assert.equal(await page.locator(".foe .pill.candy").count(), 2);
+    assert.match(await page.locator(".foe").first().innerText(), /Rattata needs 25 candies more for its first cost reduction \(has 0 of 25\), 2 unlocks left\. A catch gives 1\./);
     assert.match(await text(page, ".wave-num"), /1,764/);
   });
 
