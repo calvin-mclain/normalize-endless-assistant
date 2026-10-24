@@ -217,7 +217,7 @@ NZ.ui = (function () {
 
   function footer() {
     return '<footer class="foot"><div>Game data: PokéRogue ' + h(data.meta.version) + " (live branch, commit " + h(data.meta.commit) + "), extracted " + h(data.meta.extracted) +
-      ". Strategy: Grex's Endless Entrainment Normalize Build and your project guide.</div><div>A fan-made helper. It reads save data you hand it and never sends input to the game.</div></footer>";
+      ". Strategy: Grex's Endless Entrainment Normalize Build and your project guide.</div><div>Unofficial. It reads the save data you give it and sends nothing to the game.</div></footer>";
   }
 
   var toastBox = null;
@@ -300,7 +300,7 @@ NZ.ui = (function () {
     if (state.settings.hintedCompact || state.settings.density !== "explain") return;
     state.settings.hintedCompact = true;
     persist();
-    toast("Know the build already? Compact, in the top bar, hides the explanations.");
+    toast("Compact, in the top bar, hides the explanations.");
   }
   on("step", function (t) {
     var path = t.getAttribute("data-bind");

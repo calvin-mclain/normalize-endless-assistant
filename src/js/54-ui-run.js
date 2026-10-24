@@ -29,7 +29,7 @@
       var notes = v.notes.map(function (n) { return "<li>" + h(n) + "</li>"; }).join("");
       var warnings = (v.warnings || []).map(function (w) { return H.callout("warn", w.title, h(w.text)); }).join("");
       var foes = s.enemies.map(function (e, i) { return F.foeCard(e, v.scans[i], ctx); }).join("");
-      var sub = { run: "Nothing here for you. Teddiurk runs.", stay: "Something on this wave is worth the turns.", boss: "See the boss desk below for this fight.",
+      var sub = { run: "Nothing to catch or steal. Teddiurk runs.", stay: "This wave is worth staying for.", boss: "See the boss panel below.",
         steal: "Nothing to catch, but there are items you are short of. Thief takes the best item first (30 % a hit, three hits with two Multi Lens); then Teddiurk runs.",
         gastro: v.steals.length ? "There are items to take once the gas is off." : "" }[v.action] || "";
       return H.panel("This wave", F.waveLine(s) + '<div class="verdict ' + cls + '"><div class="verdict-call">' + h(call) + "</div>" + (sub ? H.teach(h(sub), "", "div") : "") + reasons +
@@ -41,20 +41,20 @@
     var sub = { boss: adv.kindLabel(info.kind) + ": no fleeing and no catching. Gouot must be on the field when it ends.",
       stay: r.gas ? "Gastro Acid the Neutralizing Gas Pokémon first, then follow the catching steps." : "Follow the catching steps below.",
       gastro: "Neutralizing Gas switches off your lures and Run Away. Teddiurk uses Gastro Acid on it, then runs next turn.",
-      run: "Nothing you want: Teddiurk runs. Run Away never fails outside forced bosses." }[action];
+      run: "Nothing to stay for: Teddiurk runs. Run Away never fails outside forced bosses." }[action];
     return H.panel("This wave",
       '<div class="row"><label class="field" for="run-wave">Wave<input type="number" id="run-wave" min="1" max="99999" step="1" data-bind="run.wave" value="' + r.wave + '"></label>' +
       '<button type="button" class="btn" data-act="wave-next">Next wave</button>' + H.pill(adv.kindLabel(info.kind), info.forced ? "bad" : info.kind === "x0" ? "todo" : "quiet") + "</div>" +
       '<div class="row"><label class="switch"><input type="checkbox" id="run-gas" data-bind="run.gas"' + (r.gas ? " checked" : "") + '><span>Neutralizing Gas was announced</span></label>' +
-      '<label class="switch"><input type="checkbox" id="run-want" data-bind="run.want"' + (r.want ? " checked" : "") + "><span>A shiny, or something I want</span></label></div>" +
+      '<label class="switch"><input type="checkbox" id="run-want" data-bind="run.want"' + (r.want ? " checked" : "") + "><span>A shiny or a wanted Pokémon is out</span></label></div>" +
       '<div class="verdict ' + action + '"><div class="verdict-call">' + h(call) + "</div>" + H.teach(h(sub), "", "div") + "</div>" +
-      '<p class="sub">' + H.teach("Three checks a wave, then flee. With a synced save the assistant makes these checks for you. ", "", "span") + '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="shiny">try a sample wave</button>.</p>', "manual");
+      '<p class="sub">' + H.teach("Three checks a wave, then flee. With a synced save the checks are made from the save. ", "", "span") + '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="shiny">try a sample wave</button>.</p>', "manual");
   }
 
   function positionPanel(ctx) {
     var w = currentWave(ctx), info = adv.waveInfo(w);
     var left = kb.FINAL_WAVE - w;
-    return H.panel("Where you are", F.ruler(w) + '<dl class="kv"><dt>Next forced boss</dt><dd>Wave ' + util.fmt(info.nextForced) + " · " + h(adv.kindLabel(info.nextForcedKind)) + (info.toForced ? " · in " + info.toForced + " waves" : " · now") +
+    return H.panel("Position", F.ruler(w) + '<dl class="kv"><dt>Next forced boss</dt><dd>Wave ' + util.fmt(info.nextForced) + " · " + h(adv.kindLabel(info.nextForcedKind)) + (info.toForced ? " · in " + info.toForced + " waves" : " · now") +
       "</dd><dt>Next X0 wave</dt><dd>Wave " + util.fmt(info.nextX0) + (info.nextX0 === w ? " · now" : "") + "</dd><dt>End of Endless</dt><dd>Wave " + util.fmt(kb.FINAL_WAVE) + (left > 0 ? " · " + util.fmt(left) + " to go" : "") + "</dd></dl>" +
       H.teach("Every 50 waves: a Paradox Pokémon. Every 250: Eternatus. Every 1000: Eternamax Eternatus. X0 waves hold wild bosses you can still flee.", "sub"), "the 50-wave cycle");
   }
@@ -113,7 +113,7 @@
     var eter = d.eternatus ? '<h3 class="h">Eternatus cases</h3><div class="table-wrap"><table><thead><tr><th>When</th><th>Problem</th><th>Do</th></tr></thead><tbody>' +
       kb.eternatusCases.map(function (c) { return "<tr><th>" + h(c.when) + "</th><td>" + h(c.problem) + "</td><td>" + h(c.plan) + "</td></tr>"; }).join("") + "</tbody></table></div>" : "";
     var known = desc.exact ? "Read from your save: these are its real ability and moves." : "From game data: abilities and moves are what this species can have, not what this one rolled.";
-    return head + speed + guide + line + '<h3 class="h">What the data adds</h3>' + notes + eter +
+    return head + speed + guide + line + '<h3 class="h">From game data</h3>' + notes + eter +
       H.details("boss-moves", (desc.exact ? "Its four moves" : "Level-up moves it can know") + " (" + desc.moves.length + ")", '<div class="chips">' + moves + "</div>") +
       '<p class="sub">' + H.teach(known + " ", "", "span") + '<button type="button" class="btn link" data-act="boss-reset">Clear the ticks</button></p>';
   }
@@ -124,7 +124,7 @@
     var intro = '<p class="note">Next forced boss: <strong>wave ' + util.fmt(info.nextForced) + "</strong> (" + h(adv.kindLabel(info.nextForcedKind)) + ")" + (info.toForced ? ", in " + info.toForced + " waves" : ", now") + ". " + H.teach("Pick the boss to see its plan.", "", "span") + "</p>";
     var body = target && target.auto ? "" : intro + bossPicker(ctx);
     body += target ? dossierHtml(target, ctx) : H.teach("Paradox bosses are drawn from 20 species. Slither Wing is the one that breaks the standard line.", "sub");
-    return H.panel("Boss desk", body, target && target.auto ? "this wave's boss, from your save" : "20 Paradox Pokémon and Eternatus", ' id="boss-panel"');
+    return H.panel("Boss fights", body, target && target.auto ? "this wave's boss, from your save" : "20 Paradox Pokémon and Eternatus", ' id="boss-panel"');
   }
 
   // ---- catching, shop, speed, free slots -----------------------------------------------------------------------------
@@ -132,7 +132,7 @@
     return H.panel("Catching", '<ul class="bullets">' + kb.catching.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>" +
       '<h3 class="h">Safe capture</h3><ol class="numbered">' + kb.safeCapture.map(function (s) { return "<li><div><strong>" + h(s.t) + '</strong><div class="d teach">' + h(s.d) + "</div></div></li>"; }).join("") + "</ol>" +
       H.callout("warn", "X0 waves", "Both wild Pokémon may be bosses, so you cannot Roar one away and the partner's spread move can kill the shiny. Trick-or-Treat the shiny (it becomes part Ghost) and Entrainment the partner: after two turns neither can hurt it or you."),
-      "saves Master Balls, works on X0 bosses too", "", true);
+      "without a Master Ball", "", true);
   }
 
   function shopPanel(ctx) {
@@ -144,7 +144,7 @@
     var balls = ctx.session ? '<h3 class="h">Ball stock</h3><dl class="kv"><dt>Master Balls</dt><dd class="num">' + ctx.session.balls[4] + "</dd><dt>Rogue Balls</dt><dd class=\"num\">" + ctx.session.balls[3] + "</dd><dt>Ultra Balls</dt><dd class=\"num\">" + ctx.session.balls[2] + "</dd></dl>" : "";
     return H.panel("Shop and money", H.teach("Fleeing gives no shop and no EXP. You see a shop only after a win or a catch, or after knocking out one of two wild Pokémon and fleeing the other.", "note") + balls +
       H.teach('<h3 class="h">Take, in this order</h3><ol class="numbered">' + kb.shopRules.map(function (t) { return "<li><div>" + h(t) + "</div></li>"; }).join("") + "</ol>", "", "div") +
-      '<h3 class="h">Reroll arithmetic at wave ' + util.fmt(w) + '</h3><div class="table-wrap"><table><tbody>' + rows + "</tbody></table></div>" +
+      '<h3 class="h">Reroll costs at wave ' + util.fmt(w) + '</h3><div class="table-wrap"><table><tbody>' + rows + "</tbody></table></div>" +
       H.teach("Reroll cost grows in a straight line with the wave and doubles per reroll in one shop; money rewards grow much faster. From about wave 1500 one Nugget covers any shop.", "sub"), "");
   }
 
@@ -193,7 +193,7 @@
       '<label class="field" for="sp-carbos">Carbos<input type="number" id="sp-carbos" min="0" max="31" data-bind="speed.carbos" value="' + sp.carbos + '"></label>' +
       '<label class="field" for="sp-dew">Soul Dew<input type="number" id="sp-dew" min="0" max="10" data-bind="speed.soulDew" value="' + sp.soulDew + '"></label></div>';
     return H.panel("Speed and levels", (fromSave ? goalCallout(ctx) : "") + controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
-      fromSave ? "the goal while running, from your save" : "what-if calculator", ' id="speed-panel"');
+      fromSave ? "the goal while running, from your save" : "manual", ' id="speed-panel"');
   }
 
   function freePanel(ctx) {
@@ -215,11 +215,11 @@
       H.details("free-tail", "Prankster with Tailwind (" + tail.length + ")", '<div class="chips">' + tail.map(function (r) { return H.monChip(r.id, r.form, r.slot === 2 ? "hidden ability" : ""); }).join("") + "</div>") +
       H.details("free-breaker", "Mold Breaker, Teravolt or Turboblaze (" + breakers.length + ")", '<div class="chips">' + breakers.map(function (r) { return H.monChip(r.id, r.form, r.slot === 2 ? "hidden ability" : ""); }).join("") + "</div>") +
       H.details("free-gastro", "Gastro Acid by level-up", '<div class="chips">' + data.learners(data.M.GASTRO_ACID).map(function (l) { return H.monChip(l.id, 0, adv.lvlLabel(l.lvl), l.lvl < 0); }).join("") + "</div>"),
-      "fill them after you start running");
+      "after you start running");
   }
 
   function troublePanel() {
-    return H.panel("When something goes wrong", kb.troubleshooting.map(function (t, i) {
+    return H.panel("Troubleshooting", kb.troubleshooting.map(function (t, i) {
       var body = '<p class="note">' + h(t.intro) + "</p>" + (t.list ? '<ol class="numbered">' + t.list.map(function (x) { return "<li><div>" + h(x) + "</div></li>"; }).join("") + "</ol>" : "");
       return H.details("tr-" + i, h(t.q), body, "big");
     }).join(""), "");
@@ -227,7 +227,7 @@
 
   ui.views.run = function (ctx) {
     var r = adv.readiness(ctx);
-    var warn = ctx.session && !r.ready ? H.callout("warn", "Your synced team is not ready to run yet", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
+    var warn = ctx.session && !r.ready ? H.callout("warn", "The synced team is not ready to run", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
     return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run. The goal from here is Speed: ' + util.fmt(kb.SPEED_TARGET) + ' on both Gouot and Jynxgigas by the end.</p></div>' + warn +
       '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel() + troublePanel() + '</div><div class="col">' + speedPanel(ctx) + positionPanel(ctx) + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
   };

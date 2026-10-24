@@ -71,7 +71,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
   await check("phase tabs switch views", async () => {
     await page.click("#tab-carry"); assert.equal(await h1(page), "Carry");
     await page.click("#tab-run"); assert.equal(await h1(page), "Running");
-    await page.click("#tab-sync"); assert.match(await h1(page), /read your run/);
+    await page.click("#tab-sync"); assert.match(await h1(page), /^Sync$/);
     await page.click("#tab-party"); assert.equal(await h1(page), "Party building");
     assert.equal(await page.getAttribute("#tab-party", "aria-selected"), "true");
   });
@@ -82,7 +82,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     const plus = role => page.click(`.stepper button[data-bind="reductions.${role}"][data-d="1"]`);
     await plus("carry"); await plus("carry"); await plus("runner"); await plus("runner"); await plus("killer");
     assert.match(await text(page, ".meter-top strong"), /15 \/ 15/);
-    assert.match(await text(page, ".panel .callout.good"), /the team fits/);
+    assert.match(await text(page, ".panel .callout.good"), /15 of 15 points/);
     await plus("carry");   // capped at two
     assert.match(await text(page, ".meter-top strong"), /15 \/ 15/);
   });
@@ -201,7 +201,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.match(await page.locator(".verdict").innerText(), /Eternatus/);
   });
 
-  await check("running: the boss desk gives Slither Wing the Sturdy line and keeps step ticks", async () => {
+  await check("running: the boss panel gives Slither Wing the Sturdy line and keeps step ticks", async () => {
     await page.locator('button[data-act="boss-pick"]', { hasText: "Slither Wing" }).click();
     const desk = await text(page, "#boss-panel");
     assert.match(desk, /needs a different line/i);
@@ -286,7 +286,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.equal(await variants.locator(".check-label").first().isVisible(), true);
   });
 
-  await check("density: the verdict, boss desk and checklists survive Compact on the other tabs", async () => {
+  await check("density: the verdict, boss panel and checklists survive Compact on the other tabs", async () => {
     await page.click("#tab-carry");
     assert.equal(await visible(".steps .step-title"), true);
     assert.equal(await visible(".step-how"), false);

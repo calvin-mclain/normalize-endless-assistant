@@ -154,7 +154,7 @@
       return out;
     }
     if (step.kind === "carbos") {
-      out.own.push("Any wild Pokémon holding Carbos. Enemy items show as icons under its name; the live sync flags them for you.");
+      out.own.push("Any wild Pokémon holding Carbos. Enemy items show as icons under its name; a synced save flags them.");
       return out;
     }
     var base = roleSpecies(ctx, step.who);
@@ -191,7 +191,7 @@
       }
       return out;
     }
-    if (step.need === "normalize") out.own.push("Fuse your carry (" + data.sp(ctx.roster.carry).n + ", Normalize) onto " + data.sp(base.id).n + ". Do it last: the carry stops carrying.");
+    if (step.need === "normalize") out.own.push("Fuse your carry (" + data.sp(ctx.roster.carry).n + ", Normalize) onto " + data.sp(base.id).n + ". Do it last: Regigigas stops carrying afterwards.");
     return out;
   }
 
@@ -297,7 +297,7 @@
     itemRow("killer", "WIDE_LENS", "2 Wide Lens on Yamazone (Leech Seed never misses)");
     itemRow("runner", "REVIVER_SEED", "A Reviver Seed on Teddiurk");
     var master = audit.balls ? audit.balls.master : null;
-    row("nice", "About 50 Master Balls", master == null ? "unknown" : (master >= 50 ? "ok" : "todo"), master == null ? "A good mark for a first run: you will be catching a lot." : master + " in the bag.");
+    row("nice", "About 50 Master Balls", master == null ? "unknown" : (master >= 50 ? "ok" : "todo"), master == null ? "Enough for a first run." : master + " in the bag.");
     var charms = audit.bag.filter(function (b) { return b.key === "SHINY_CHARM"; })[0];
     row("nice", "4 Shiny Charms", unknown && !charms.have ? "unknown" : (charms.done ? "ok" : "todo"), charms.have + " of 4.");
     var needRows = rows.filter(function (r) { return r.level === "need"; });

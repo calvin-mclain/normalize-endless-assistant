@@ -1,6 +1,6 @@
 /* Layout: a sticky phase bar over one working column; panels pair up side by side on wide screens.
    Palette: Ghost violet for the interface, Normal khaki as the second voice (the build is Normal moves versus Ghost types).
-   Type: a pixel display face for names and wave numbers, a high-legibility sans for everything you read mid-battle. */
+   Type: one high-legibility sans throughout; headings and wave numbers differ by weight and size only. */
 :root {
   --bg: #efedf5;
   --surface: #faf9fd;
@@ -26,7 +26,7 @@
   --shiny: #7d5a00;
   --shiny-soft: #fdeebf;
   --shadow: 0 1px 0 rgba(31, 26, 46, 0.06), 0 6px 18px -12px rgba(31, 26, 46, 0.35);
-  --font-display: "Pixelify Sans", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-body);
   --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --r: 4px;

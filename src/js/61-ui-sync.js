@@ -6,7 +6,7 @@
   function statusPanel(ctx) {
     var g = ui.game, body;
     if (!g.session && !g.system) {
-      body = H.callout("plain", "Nothing synced", H.teach("The assistant works without it: every checklist can be ticked by hand. Synced, it fills them in from your save and reads each wave for you.", "", "span"));
+      body = H.callout("plain", "Nothing synced", H.teach("Every checklist can be ticked by hand. Synced, they are filled in from your save and each wave is read for you.", "", "span"));
     } else {
       var rows = "";
       if (g.session) {
@@ -28,7 +28,7 @@
   function bridgePanel() {
     var href = bridge.bookmarklet();
     return H.panel("The bridge bookmark",
-      H.teach("A few lines of script you run in the PokéRogue tab. It reads the save the game keeps in that tab and hands it to this page. That is all it does.", "note") +
+      H.teach("A few lines of script you run in the PokéRogue tab. It reads the save the game keeps in that tab and hands it to this page.", "note") +
       '<div class="row"><a class="bookmarklet" id="bridge-link" href="' + h(href) + '" data-act="bookmark-click" draggable="true" title="Drag to your bookmarks bar">NZ bridge</a><span class="sub">Drag this to your bookmarks bar.</span></div>' +
       '<div class="row"><button type="button" class="btn small" data-act="copy" data-what="bookmarklet">Copy as a bookmark address</button><button type="button" class="btn small" data-act="copy" data-what="snippet">Copy as a console snippet</button></div>' +
       (bridge.status.manualCopy ? '<label class="field" for="copy-out">Copy this by hand<textarea id="copy-out" class="paste" readonly spellcheck="false">' + h(bridge.status.manualCopy) + '</textarea></label><div class="row"><button type="button" class="btn small" data-act="copy-hide">Hide</button></div>' : "") +
@@ -60,12 +60,12 @@
       '<li><div><strong>Come back here and press Ctrl+V anywhere on this page.</strong><div class="d teach">Or paste into the box.</div></div></li>' +
       '<li><div><strong>On later waves, click Copy save in the game tab and paste again.</strong><div class="d teach">The button stays until you reload the game or close it with ×.</div></div></li></ol>' +
       '<label class="field" for="paste-box">Pasted save<textarea id="paste-box" class="paste" placeholder="Paste here" spellcheck="false"></textarea></label>' +
-      '<div class="row"><button type="button" class="btn" data-act="paste-go">Read the pasted save</button></div>', "works everywhere, one paste per check");
+      '<div class="row"><button type="button" class="btn" data-act="paste-go">Read the pasted save</button></div>', "one paste per check");
   }
 
   function filePanel() {
     return H.panel("Export file",
-      H.teach("No script at all: in the game open Menu, then Manage Data, then Export Session (your run) or Export Data (your unlocks), and drop the <code>.prsv</code> file here. An exported session is the server copy, which the game updates every five waves, so it can be a few waves behind.", "note") +
+      H.teach("Without the script: in the game open Menu, then Manage Data, then Export Session (your run) or Export Data (your unlocks), and drop the <code>.prsv</code> file here. An exported session is the server copy, which the game updates every five waves, so it can be a few waves behind.", "note") +
       '<div class="drop" id="drop-zone"><strong>Drop .prsv files anywhere on this page</strong><label class="btn" for="file-pick">Choose files</label><input class="sr" type="file" id="file-pick" accept=".prsv,.json,.txt" multiple></div>', "");
   }
 
@@ -73,7 +73,7 @@
     var s = ui.state.settings;
     return H.panel("Settings",
       '<label class="switch"><input type="checkbox" id="set-peek" data-bind="settings.peek"' + (s.peek ? " checked" : "") + "><span>Show hidden enemy details</span></label>" +
-      H.teach("Off: the assistant only uses what the game shows you (species, level, boss bars, shiny, held items) plus what that species can have. On: it also reads each wild Pokémon's real ability, moves and Speed from the save, which the game does not show. Your call.", "sub") +
+      H.teach("Off: the assistant only uses what the game shows you (species, level, boss bars, shiny, held items) plus what that species can have. On: it also reads each wild Pokémon's real ability, moves and Speed from the save, which the game does not show.", "sub") +
       '<label class="switch"><input type="checkbox" id="set-sound" data-bind="settings.sound"' + (s.sound ? " checked" : "") + "><span>Sound when a wave is worth staying for</span></label>" +
       H.teach("Live link only. A short two-note beep for shinies, Pokémon missing from your dex and pieces of the build.", "sub") +
       '<label class="switch"><input type="checkbox" id="set-sound-items" data-bind="settings.soundItems"' + (s.soundItems ? " checked" : "") + (s.sound ? "" : " disabled") + "><span>Also for items worth stealing</span></label>" +
@@ -82,7 +82,7 @@
   }
 
   function samplePanel() {
-    return H.panel("Try it with a sample", H.teach("Example saves in the game's real format, to see what a synced page looks like. They are not your run.", "note") + '<div class="chips">' +
+    return H.panel("Sample saves", H.teach("Example saves in the game's real format, to see what a synced page looks like. They are not your run.", "note") + '<div class="chips">' +
       '<button type="button" class="chip" data-act="sample" data-sample="carry">Carry phase, wave 734</button>' +
       '<button type="button" class="chip" data-act="sample" data-sample="shiny">Running, a shiny on wave 1763</button>' +
       '<button type="button" class="chip" data-act="sample" data-sample="plain">Running, nothing on wave 1764</button>' +
@@ -91,7 +91,7 @@
 
   function aboutPanel() {
     return H.panel("What this page reads and keeps",
-      '<ul class="bullets"><li><strong>Read-only.</strong> The assistant does not play. It cannot press a key, click, or change a save.</li>' +
+      '<ul class="bullets"><li><strong>Read-only.</strong> The page does not play the game: it cannot press a key, click, or change a save.</li>' +
       "<li>From a session save it keeps the wave, your party, held items, balls, money and the wild Pokémon of the current wave. From a system save it keeps starter unlocks and which species you have caught.</li>" +
       "<li>Trainer and secret ids are dropped. Nothing leaves your browser: the decoded summary is stored in this browser only, so a reload keeps it.</li>" +
       "<li>The game writes its save at the start of each wave, so the page is at most one wave behind what you see.</li></ul>" +
@@ -99,7 +99,7 @@
   }
 
   ui.views.sync = function (ctx) {
-    return '<div class="view-head"><p class="eyebrow">Sync</p><h1>Let the assistant read your run</h1><p class="lede">It reads the save the game keeps in your browser. It never sends anything to the game.</p></div>' +
+    return '<div class="view-head"><p class="eyebrow">Sync</p><h1>Sync</h1><p class="lede">The page reads the save the game keeps in your browser. Nothing is sent to the game.</p></div>' +
       '<div class="cols"><div class="col">' + statusPanel(ctx) + bridgePanel() + livePanel() + pastePanel() + filePanel() + '</div><div class="col">' + settingsPanel() + samplePanel() + aboutPanel() + "</div></div>";
   };
 })();

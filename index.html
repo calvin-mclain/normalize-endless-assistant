@@ -1,11 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Normalize Endless Assistant</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: a sticky phase bar over one working column; panels pair up side by side on wide screens.
    Palette: Ghost violet for the interface, Normal khaki as the second voice (the build is Normal moves versus Ghost types).
-   Type: a pixel display face for names and wave numbers, a high-legibility sans for everything you read mid-battle. */
+   Type: one high-legibility sans throughout; headings and wave numbers differ by weight and size only. */
 :root {
   --bg: #efedf5;
   --surface: #faf9fd;
@@ -31,7 +30,7 @@
   --shiny: #7d5a00;
   --shiny-soft: #fdeebf;
   --shadow: 0 1px 0 rgba(31, 26, 46, 0.06), 0 6px 18px -12px rgba(31, 26, 46, 0.35);
-  --font-display: "Pixelify Sans", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-body);
   --font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --r: 4px;
@@ -2158,7 +2157,7 @@ NZ.advisor = (function () {
       return out;
     }
     if (step.kind === "carbos") {
-      out.own.push("Any wild Pokémon holding Carbos. Enemy items show as icons under its name; the live sync flags them for you.");
+      out.own.push("Any wild Pokémon holding Carbos. Enemy items show as icons under its name; a synced save flags them.");
       return out;
     }
     var base = roleSpecies(ctx, step.who);
@@ -2195,7 +2194,7 @@ NZ.advisor = (function () {
       }
       return out;
     }
-    if (step.need === "normalize") out.own.push("Fuse your carry (" + data.sp(ctx.roster.carry).n + ", Normalize) onto " + data.sp(base.id).n + ". Do it last: the carry stops carrying.");
+    if (step.need === "normalize") out.own.push("Fuse your carry (" + data.sp(ctx.roster.carry).n + ", Normalize) onto " + data.sp(base.id).n + ". Do it last: Regigigas stops carrying afterwards.");
     return out;
   }
 
@@ -2301,7 +2300,7 @@ NZ.advisor = (function () {
     itemRow("killer", "WIDE_LENS", "2 Wide Lens on Yamazone (Leech Seed never misses)");
     itemRow("runner", "REVIVER_SEED", "A Reviver Seed on Teddiurk");
     var master = audit.balls ? audit.balls.master : null;
-    row("nice", "About 50 Master Balls", master == null ? "unknown" : (master >= 50 ? "ok" : "todo"), master == null ? "A good mark for a first run: you will be catching a lot." : master + " in the bag.");
+    row("nice", "About 50 Master Balls", master == null ? "unknown" : (master >= 50 ? "ok" : "todo"), master == null ? "Enough for a first run." : master + " in the bag.");
     var charms = audit.bag.filter(function (b) { return b.key === "SHINY_CHARM"; })[0];
     row("nice", "4 Shiny Charms", unknown && !charms.have ? "unknown" : (charms.done ? "ok" : "todo"), charms.have + " of 4.");
     var needRows = rows.filter(function (r) { return r.level === "need"; });
@@ -2677,7 +2676,7 @@ NZ.advisor = (function () {
     if (ctx.system && data.sp(enemy.species)) {
       var caught = ctx.system.caught.indexOf(enemy.species) !== -1;
       if (!caught) add("want", data.sp(enemy.species).n + " is not in your dex yet.", true, "not in your dex");
-      else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex.", true, "new to your dex", "Catch it.");
+      else if (dexNews(enemy, ctx.system)) add("want", "This " + data.sp(enemy.species).n + " has something new for your dex.", true, "new for your dex");
       else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true, "shiny you do not own");
     }
     var matches = scout(enemy, ctx, exact);
@@ -2975,7 +2974,7 @@ NZ.ui = (function () {
 
   function footer() {
     return '<footer class="foot"><div>Game data: PokéRogue ' + h(data.meta.version) + " (live branch, commit " + h(data.meta.commit) + "), extracted " + h(data.meta.extracted) +
-      ". Strategy: Grex's Endless Entrainment Normalize Build and your project guide.</div><div>A fan-made helper. It reads save data you hand it and never sends input to the game.</div></footer>";
+      ". Strategy: Grex's Endless Entrainment Normalize Build and your project guide.</div><div>Unofficial. It reads the save data you give it and sends nothing to the game.</div></footer>";
   }
 
   var toastBox = null;
@@ -3058,7 +3057,7 @@ NZ.ui = (function () {
     if (state.settings.hintedCompact || state.settings.density !== "explain") return;
     state.settings.hintedCompact = true;
     persist();
-    toast("Know the build already? Compact, in the top bar, hides the explanations.");
+    toast("Compact, in the top bar, hides the explanations.");
   }
   on("step", function (t) {
     var path = t.getAttribute("data-bind");
@@ -3101,8 +3100,8 @@ NZ.ui = (function () {
     }).join("");
     var verdict = b.over
       ? H.callout("warn", b.total + " of 15 points: " + b.over + " over", "Fully reduced, this team costs " + b.floor + ". " + H.teach("Buy candy cost reductions until the six fit. Each reduction takes 1 point off a starter that costs more than 1, then halves it.", "", "span"))
-      : H.callout("good", b.total + " of 15 points: the team fits", b.total < 15 ? (15 - b.total) + " to spare." : "Exactly on the limit.");
-    return H.panel("Starter points", '<div class="meter"><div class="meter-top"><span>Endless gives you 15 starter points</span><strong class="num">' + b.total + " / 15</strong></div>" + bar + "</div>" + verdict +
+      : H.callout("good", b.total + " of 15 points", b.total < 15 ? (15 - b.total) + " to spare." : "Exactly on the limit.");
+    return H.panel("Starter points", '<div class="meter"><div class="meter-top"><span>15 starter points in Endless</span><strong class="num">' + b.total + " / 15</strong></div>" + bar + "</div>" + verdict +
       '<ul class="budget">' + rows + "</ul>",
       ctx.system ? "reductions read from your save" : "set your reductions by hand, or sync");
   }
@@ -3153,8 +3152,8 @@ NZ.ui = (function () {
         '<dl class="kv"><dt>Ability / passive</dt><dd>' + h(t.ability) + " / " + h(t.passive) + "</dd><dt>Nature</dt><dd>" + h(t.nature) + (t.tera ? " · Tera Ghost" : "") + "</dd></dl>" +
         '<div class="chips">' + moves + '</div><div class="chips">' + items + "</div>" + H.teach(h(t.why), "note") + "</div>";
     }).join("");
-    return H.panel("What you are building toward", H.teach("Four fusions do everything; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.", "note") +
-      '<div class="team">' + rows + "</div>", "the final team", "", true);
+    return H.panel("Final team", H.teach("Four fusions; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.", "note") +
+      '<div class="team">' + rows + "</div>", "four fusions", "", true);
   }
 
   function variantsPanel() {
@@ -3167,11 +3166,11 @@ NZ.ui = (function () {
   ui.views.party = function (ctx) {
     var syncNote = ctx.system
       ? H.teach(H.callout("good", "Unlocks read from your save", "Passives, hidden abilities, natures, egg moves, IVs and candy counts below come from the system save synced " + h(util.ago(ui.game.at)) + "."), "", "div")
-      : H.teach(H.callout("plain", "Check your unlocks automatically", 'Sync your save and every tick below fills itself in from your real unlocks. <button type="button" class="btn link" data-act="tab" data-tab="sync">Open Sync</button>'), "", "div");
+      : H.teach(H.callout("plain", "Not synced", 'With a synced save, the checks below are filled in from your unlocks. <button type="button" class="btn link" data-act="tab" data-tab="sync">Open Sync</button>'), "", "div");
     var cards = kb.ROLE_ORDER.map(function (role) { return roleCard(role, ctx); }).join("");
     return '<div class="view-head"><p class="eyebrow">Phase 1</p><h1>Party building</h1><p class="lede">Six starters chosen for their passives. Unlock every passive and hidden ability before the run starts: they do not unlock mid-run. Keep the first four unevolved until their fusions.</p></div>' +
       syncNote + budgetPanel(ctx) + '<div class="grid-3">' + cards + "</div>" + '<div class="cols"><div class="col">' + teamPanel() + '</div><div class="col">' + variantsPanel() +
-      '<div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="carry">Team picked: go to Carry</button></div></div></div>';
+      '<div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="carry">Continue to Carry</button></div></div></div>';
   };
 
   ui.on("unlock", function (t) {
@@ -3224,7 +3223,7 @@ NZ.ui = (function () {
     }).join("");
     return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
       (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") +
-      (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing here for the build.</div>') +
+      (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing for the build.</div>') +
       '<div><button type="button" class="btn link" data-act="scout" data-id="' + enemy.species + '" data-form="' + enemy.form + '">Species details</button></div></div>';
   }
 
@@ -3239,7 +3238,7 @@ NZ.ui = (function () {
     var labels = "";
     for (var l = 0; l <= 5; l++) labels += "<span>" + util.fmt(l === 0 ? start : start + l * 10 - 1) + "</span>";
     return '<div class="ruler" role="img" aria-label="Position in the 50-wave cycle: wave ' + wave + " of " + start + " to " + (start + 49) + '"><div class="ruler-cells">' + cells +
-      '</div><div class="ruler-labels">' + labels + '</div><div class="legend"><span><i class="now"></i>you</span><span><i class="x0"></i>X0 boss wave</span><span><i class="forced"></i>forced boss (no flee, no catch)</span></div></div>';
+      '</div><div class="ruler-labels">' + labels + '</div><div class="legend"><span><i class="now"></i>current wave</span><span><i class="x0"></i>X0 boss wave</span><span><i class="forced"></i>forced boss (no flee, no catch)</span></div></div>';
   }
 
   function odds(p) { return p >= 1 ? "guaranteed" : p <= 0 ? "never" : p === 0.5 ? "1 in 2" : "1 in " + Math.round(1 / p); }
@@ -3268,11 +3267,11 @@ NZ.ui = (function () {
     }
     // the Running tab has no lure panel: once both fusions are out every wave is a double, and the verdict warns when Gouot is not in slot 1
     if (phase === "carry") {
-      body += '<ul class="bullets teach"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
+      body += '<ul class="bullets teach"><li><strong>Regigigas in slot 1,</strong> Pumpkaboo or Gourgeist in slot 2 for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
     } else {
-      body += '<ul class="bullets teach"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed, ever. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
+      body += '<ul class="bullets teach"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
     }
-    return H.panel("Doubles chain", body, "who is out when the battle ends");
+    return H.panel("Doubles chain", body, "lure sources on the field");
   }
 
   function scoutCard(id, formIndex, ctx, phase) {
@@ -3303,8 +3302,8 @@ NZ.ui = (function () {
     }).join("");
     return '<div class="foe"><div class="foe-top"><span class="foe-name">' + h(data.name(id, formIndex)) + "</span>" + H.typeChips(f.types) + dex + (sp.c ? '<span class="sub num">starter · ' + sp.c + " pts</span>" : "") + "</div>" + forms +
       '<dl class="kv"><dt>Abilities</dt><dd>' + abilities.join(", ") + "</dd><dt>Passive</dt><dd>" + H.ab(data.passive(id, formIndex)) + " " + H.teach("(bosses and unlocked starters only)", "sub", "span") + '</dd><dt>Base Speed</dt><dd class="num">' + f.stats[5] + "</dd></dl>" +
-      '<h3 class="h">For your build</h3>' + list +
-      (threat ? H.details("scout-threat", "If you had to fight it as a boss", '<ul class="alerts">' + threat + "</ul>") : "") +
+      '<h3 class="h">Use in the build</h3>' + list +
+      (threat ? H.details("scout-threat", "As a boss", '<ul class="alerts">' + threat + "</ul>") : "") +
       H.details("scout-moves", "Level-up moves (" + lm.length + ")", '<div class="chips">' + moveChips + "</div>" + H.teach("Wild Pokémon only know level-up moves. A fused Pokémon can relearn any of these with a Memory Mushroom.", "sub")) + "</div>";
   }
 
@@ -3372,8 +3371,8 @@ NZ.ui = (function () {
     }).join("");
     var name = m ? m.name : data.sp(ctx.roster.carry).n;
     var merged = ctx.assign.flags.carry && ctx.assign.flags.carry.mergedInto;
-    if (merged) return H.panel("Carry kit", H.callout("good", "The carry is fused", "It now lives inside " + h(ctx.assign.flags.carry.member.name) + ". You are past the carry phase."), "");
-    return H.panel("Carry kit", '<ul class="checks">' + rows + "</ul>" + H.teach(h(name) + " should clear every double by itself. Abuse Endure; skip Rare Candies and Candy Jars.", "note"), h(name));
+    if (merged) return H.panel("Carry kit", H.callout("good", "The carry is fused", "It is now part of " + h(ctx.assign.flags.carry.member.name) + ": the carry phase is over."), "");
+    return H.panel("Carry kit", '<ul class="checks">' + rows + "</ul>" + H.teach(h(name) + " clears every double by itself. Use Endure freely; skip Rare Candies and Candy Jars.", "note"), h(name));
   }
 
   function candidateHtml(step, ctx) {
@@ -3411,7 +3410,7 @@ NZ.ui = (function () {
     return H.panel("Splice list", '<div class="meter"><div class="meter-top"><span>' + H.teach("In the guide's priority order. A rarer carrier jumps the queue when it shows up.", "", "span") + '</span><strong class="num">' + done + " / " + kb.steps.length + "</strong></div>" +
       '<span class="segbar go" aria-hidden="true">' + kb.steps.map(function (s) { return "<i" + (adv.effectiveStep(s, ctx).state === "done" ? ' class="on"' : "") + "></i>"; }).join("") + "</span></div>" +
       H.teach("Unsplice means: fuse, learn the move, unfuse. The first Pokémon keeps its passive; the second gives its ability and is used up.", "note") + '<ol class="steps">' + rows + "</ol>",
-      ctx.session ? "ticks follow your save" : "tick by hand, or sync");
+      ctx.session ? "from your save" : "tick by hand, or sync");
   }
 
   /** Item targets for the final team. phase: "carry" or "run"; the Running tab shows the same counts so eggs can be tracked without switching back. */
@@ -3437,7 +3436,7 @@ NZ.ui = (function () {
     var meter = '<div class="meter"><div class="meter-top"><span>' + (left.length ? (onlyOpen ? "Still to collect while you run; the rest is met." : "Still to collect: " + left.map(function (row) { return h(row.name); }).join(", ")) : "Every item target is met.") +
       '</span><strong class="num">' + (all.length - left.length) + " / " + all.length + "</strong></div>" + H.segbar(all.length - left.length, all.length, "go") + "</div>";
     var note = phase === "run" ? H.teach("Eggs and Grip Claws come off wild Pokémon only: Thief or Mini Black Hole whatever carries one, or catch it. Vitamins cannot be stolen; Carbos come through fuse-and-dump.", "sub")
-      : H.teach("Don't wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.", "sub");
+      : H.teach("Start running before every egg is collected and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.", "sub");
     var bagBlock = bag || balls ? '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div>" : "";
     return H.panel("Items", meter + (roles || bagBlock ? '<div class="audit">' + roles + bagBlock + "</div>" : "") + note,
       audit.synced ? "counted from your save" : "set counts by hand, or sync", ' id="items-' + (phase || "carry") + '"');
@@ -3453,9 +3452,9 @@ NZ.ui = (function () {
     }
     var head = r.ready ? H.callout("good", "Ready to run", "Every must-have is in place.")
       : r.known ? H.callout("warn", r.open + " must-have" + (r.open === 1 ? "" : "s") + " open", H.teach("Regigigas can carry well past wave 2000 if you need longer, but the earlier you run the better.", "", "span"))
-        : H.teach(H.callout("plain", "Sync to check this for you", "Without a save, tick the splice list by hand and judge these yourself."), "", "div");
-    return H.panel("Ready to run?", head + '<h3 class="h">Must have</h3><ul class="checks">' + rows("need") + '</ul><h3 class="h">Good to have</h3><ul class="checks">' + rows("nice") +
-      '</ul><div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="run">Start running</button></div>', "");
+        : H.teach(H.callout("plain", "Not synced", "Without a save, tick the splice list by hand and judge these yourself."), "", "div");
+    return H.panel("Readiness", head + '<h3 class="h">Must have</h3><ul class="checks">' + rows("need") + '</ul><h3 class="h">Good to have</h3><ul class="checks">' + rows("nice") +
+      '</ul><div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="run">Continue to Running</button></div>', "");
   }
 
   ui.views.carry = function (ctx) {
@@ -3516,7 +3515,7 @@ NZ.ui = (function () {
       var notes = v.notes.map(function (n) { return "<li>" + h(n) + "</li>"; }).join("");
       var warnings = (v.warnings || []).map(function (w) { return H.callout("warn", w.title, h(w.text)); }).join("");
       var foes = s.enemies.map(function (e, i) { return F.foeCard(e, v.scans[i], ctx); }).join("");
-      var sub = { run: "Nothing here for you. Teddiurk runs.", stay: "Something on this wave is worth the turns.", boss: "See the boss desk below for this fight.",
+      var sub = { run: "Nothing to catch or steal. Teddiurk runs.", stay: "This wave is worth staying for.", boss: "See the boss panel below.",
         steal: "Nothing to catch, but there are items you are short of. Thief takes the best item first (30 % a hit, three hits with two Multi Lens); then Teddiurk runs.",
         gastro: v.steals.length ? "There are items to take once the gas is off." : "" }[v.action] || "";
       return H.panel("This wave", F.waveLine(s) + '<div class="verdict ' + cls + '"><div class="verdict-call">' + h(call) + "</div>" + (sub ? H.teach(h(sub), "", "div") : "") + reasons +
@@ -3528,20 +3527,20 @@ NZ.ui = (function () {
     var sub = { boss: adv.kindLabel(info.kind) + ": no fleeing and no catching. Gouot must be on the field when it ends.",
       stay: r.gas ? "Gastro Acid the Neutralizing Gas Pokémon first, then follow the catching steps." : "Follow the catching steps below.",
       gastro: "Neutralizing Gas switches off your lures and Run Away. Teddiurk uses Gastro Acid on it, then runs next turn.",
-      run: "Nothing you want: Teddiurk runs. Run Away never fails outside forced bosses." }[action];
+      run: "Nothing to stay for: Teddiurk runs. Run Away never fails outside forced bosses." }[action];
     return H.panel("This wave",
       '<div class="row"><label class="field" for="run-wave">Wave<input type="number" id="run-wave" min="1" max="99999" step="1" data-bind="run.wave" value="' + r.wave + '"></label>' +
       '<button type="button" class="btn" data-act="wave-next">Next wave</button>' + H.pill(adv.kindLabel(info.kind), info.forced ? "bad" : info.kind === "x0" ? "todo" : "quiet") + "</div>" +
       '<div class="row"><label class="switch"><input type="checkbox" id="run-gas" data-bind="run.gas"' + (r.gas ? " checked" : "") + '><span>Neutralizing Gas was announced</span></label>' +
-      '<label class="switch"><input type="checkbox" id="run-want" data-bind="run.want"' + (r.want ? " checked" : "") + "><span>A shiny, or something I want</span></label></div>" +
+      '<label class="switch"><input type="checkbox" id="run-want" data-bind="run.want"' + (r.want ? " checked" : "") + "><span>A shiny or a wanted Pokémon is out</span></label></div>" +
       '<div class="verdict ' + action + '"><div class="verdict-call">' + h(call) + "</div>" + H.teach(h(sub), "", "div") + "</div>" +
-      '<p class="sub">' + H.teach("Three checks a wave, then flee. With a synced save the assistant makes these checks for you. ", "", "span") + '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="shiny">try a sample wave</button>.</p>', "manual");
+      '<p class="sub">' + H.teach("Three checks a wave, then flee. With a synced save the checks are made from the save. ", "", "span") + '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="shiny">try a sample wave</button>.</p>', "manual");
   }
 
   function positionPanel(ctx) {
     var w = currentWave(ctx), info = adv.waveInfo(w);
     var left = kb.FINAL_WAVE - w;
-    return H.panel("Where you are", F.ruler(w) + '<dl class="kv"><dt>Next forced boss</dt><dd>Wave ' + util.fmt(info.nextForced) + " · " + h(adv.kindLabel(info.nextForcedKind)) + (info.toForced ? " · in " + info.toForced + " waves" : " · now") +
+    return H.panel("Position", F.ruler(w) + '<dl class="kv"><dt>Next forced boss</dt><dd>Wave ' + util.fmt(info.nextForced) + " · " + h(adv.kindLabel(info.nextForcedKind)) + (info.toForced ? " · in " + info.toForced + " waves" : " · now") +
       "</dd><dt>Next X0 wave</dt><dd>Wave " + util.fmt(info.nextX0) + (info.nextX0 === w ? " · now" : "") + "</dd><dt>End of Endless</dt><dd>Wave " + util.fmt(kb.FINAL_WAVE) + (left > 0 ? " · " + util.fmt(left) + " to go" : "") + "</dd></dl>" +
       H.teach("Every 50 waves: a Paradox Pokémon. Every 250: Eternatus. Every 1000: Eternamax Eternatus. X0 waves hold wild bosses you can still flee.", "sub"), "the 50-wave cycle");
   }
@@ -3600,7 +3599,7 @@ NZ.ui = (function () {
     var eter = d.eternatus ? '<h3 class="h">Eternatus cases</h3><div class="table-wrap"><table><thead><tr><th>When</th><th>Problem</th><th>Do</th></tr></thead><tbody>' +
       kb.eternatusCases.map(function (c) { return "<tr><th>" + h(c.when) + "</th><td>" + h(c.problem) + "</td><td>" + h(c.plan) + "</td></tr>"; }).join("") + "</tbody></table></div>" : "";
     var known = desc.exact ? "Read from your save: these are its real ability and moves." : "From game data: abilities and moves are what this species can have, not what this one rolled.";
-    return head + speed + guide + line + '<h3 class="h">What the data adds</h3>' + notes + eter +
+    return head + speed + guide + line + '<h3 class="h">From game data</h3>' + notes + eter +
       H.details("boss-moves", (desc.exact ? "Its four moves" : "Level-up moves it can know") + " (" + desc.moves.length + ")", '<div class="chips">' + moves + "</div>") +
       '<p class="sub">' + H.teach(known + " ", "", "span") + '<button type="button" class="btn link" data-act="boss-reset">Clear the ticks</button></p>';
   }
@@ -3611,7 +3610,7 @@ NZ.ui = (function () {
     var intro = '<p class="note">Next forced boss: <strong>wave ' + util.fmt(info.nextForced) + "</strong> (" + h(adv.kindLabel(info.nextForcedKind)) + ")" + (info.toForced ? ", in " + info.toForced + " waves" : ", now") + ". " + H.teach("Pick the boss to see its plan.", "", "span") + "</p>";
     var body = target && target.auto ? "" : intro + bossPicker(ctx);
     body += target ? dossierHtml(target, ctx) : H.teach("Paradox bosses are drawn from 20 species. Slither Wing is the one that breaks the standard line.", "sub");
-    return H.panel("Boss desk", body, target && target.auto ? "this wave's boss, from your save" : "20 Paradox Pokémon and Eternatus", ' id="boss-panel"');
+    return H.panel("Boss fights", body, target && target.auto ? "this wave's boss, from your save" : "20 Paradox Pokémon and Eternatus", ' id="boss-panel"');
   }
 
   // ---- catching, shop, speed, free slots -----------------------------------------------------------------------------
@@ -3619,7 +3618,7 @@ NZ.ui = (function () {
     return H.panel("Catching", '<ul class="bullets">' + kb.catching.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>" +
       '<h3 class="h">Safe capture</h3><ol class="numbered">' + kb.safeCapture.map(function (s) { return "<li><div><strong>" + h(s.t) + '</strong><div class="d teach">' + h(s.d) + "</div></div></li>"; }).join("") + "</ol>" +
       H.callout("warn", "X0 waves", "Both wild Pokémon may be bosses, so you cannot Roar one away and the partner's spread move can kill the shiny. Trick-or-Treat the shiny (it becomes part Ghost) and Entrainment the partner: after two turns neither can hurt it or you."),
-      "saves Master Balls, works on X0 bosses too", "", true);
+      "without a Master Ball", "", true);
   }
 
   function shopPanel(ctx) {
@@ -3631,7 +3630,7 @@ NZ.ui = (function () {
     var balls = ctx.session ? '<h3 class="h">Ball stock</h3><dl class="kv"><dt>Master Balls</dt><dd class="num">' + ctx.session.balls[4] + "</dd><dt>Rogue Balls</dt><dd class=\"num\">" + ctx.session.balls[3] + "</dd><dt>Ultra Balls</dt><dd class=\"num\">" + ctx.session.balls[2] + "</dd></dl>" : "";
     return H.panel("Shop and money", H.teach("Fleeing gives no shop and no EXP. You see a shop only after a win or a catch, or after knocking out one of two wild Pokémon and fleeing the other.", "note") + balls +
       H.teach('<h3 class="h">Take, in this order</h3><ol class="numbered">' + kb.shopRules.map(function (t) { return "<li><div>" + h(t) + "</div></li>"; }).join("") + "</ol>", "", "div") +
-      '<h3 class="h">Reroll arithmetic at wave ' + util.fmt(w) + '</h3><div class="table-wrap"><table><tbody>' + rows + "</tbody></table></div>" +
+      '<h3 class="h">Reroll costs at wave ' + util.fmt(w) + '</h3><div class="table-wrap"><table><tbody>' + rows + "</tbody></table></div>" +
       H.teach("Reroll cost grows in a straight line with the wave and doubles per reroll in one shop; money rewards grow much faster. From about wave 1500 one Nugget covers any shop.", "sub"), "");
   }
 
@@ -3680,7 +3679,7 @@ NZ.ui = (function () {
       '<label class="field" for="sp-carbos">Carbos<input type="number" id="sp-carbos" min="0" max="31" data-bind="speed.carbos" value="' + sp.carbos + '"></label>' +
       '<label class="field" for="sp-dew">Soul Dew<input type="number" id="sp-dew" min="0" max="10" data-bind="speed.soulDew" value="' + sp.soulDew + '"></label></div>';
     return H.panel("Speed and levels", (fromSave ? goalCallout(ctx) : "") + controls + '<div class="slots">' + cards + "</div>" + '<ul class="bullets teach">' + kb.speedNotes.map(function (t) { return "<li>" + h(t) + "</li>"; }).join("") + "</ul>",
-      fromSave ? "the goal while running, from your save" : "what-if calculator", ' id="speed-panel"');
+      fromSave ? "the goal while running, from your save" : "manual", ' id="speed-panel"');
   }
 
   function freePanel(ctx) {
@@ -3702,11 +3701,11 @@ NZ.ui = (function () {
       H.details("free-tail", "Prankster with Tailwind (" + tail.length + ")", '<div class="chips">' + tail.map(function (r) { return H.monChip(r.id, r.form, r.slot === 2 ? "hidden ability" : ""); }).join("") + "</div>") +
       H.details("free-breaker", "Mold Breaker, Teravolt or Turboblaze (" + breakers.length + ")", '<div class="chips">' + breakers.map(function (r) { return H.monChip(r.id, r.form, r.slot === 2 ? "hidden ability" : ""); }).join("") + "</div>") +
       H.details("free-gastro", "Gastro Acid by level-up", '<div class="chips">' + data.learners(data.M.GASTRO_ACID).map(function (l) { return H.monChip(l.id, 0, adv.lvlLabel(l.lvl), l.lvl < 0); }).join("") + "</div>"),
-      "fill them after you start running");
+      "after you start running");
   }
 
   function troublePanel() {
-    return H.panel("When something goes wrong", kb.troubleshooting.map(function (t, i) {
+    return H.panel("Troubleshooting", kb.troubleshooting.map(function (t, i) {
       var body = '<p class="note">' + h(t.intro) + "</p>" + (t.list ? '<ol class="numbered">' + t.list.map(function (x) { return "<li><div>" + h(x) + "</div></li>"; }).join("") + "</ol>" : "");
       return H.details("tr-" + i, h(t.q), body, "big");
     }).join(""), "");
@@ -3714,7 +3713,7 @@ NZ.ui = (function () {
 
   ui.views.run = function (ctx) {
     var r = adv.readiness(ctx);
-    var warn = ctx.session && !r.ready ? H.callout("warn", "Your synced team is not ready to run yet", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
+    var warn = ctx.session && !r.ready ? H.callout("warn", "The synced team is not ready to run", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
     return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run. The goal from here is Speed: ' + util.fmt(kb.SPEED_TARGET) + ' on both Gouot and Jynxgigas by the end.</p></div>' + warn +
       '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel() + troublePanel() + '</div><div class="col">' + speedPanel(ctx) + positionPanel(ctx) + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
   };
@@ -4029,7 +4028,7 @@ NZ.bridge = (function () {
   function statusPanel(ctx) {
     var g = ui.game, body;
     if (!g.session && !g.system) {
-      body = H.callout("plain", "Nothing synced", H.teach("The assistant works without it: every checklist can be ticked by hand. Synced, it fills them in from your save and reads each wave for you.", "", "span"));
+      body = H.callout("plain", "Nothing synced", H.teach("Every checklist can be ticked by hand. Synced, they are filled in from your save and each wave is read for you.", "", "span"));
     } else {
       var rows = "";
       if (g.session) {
@@ -4051,7 +4050,7 @@ NZ.bridge = (function () {
   function bridgePanel() {
     var href = bridge.bookmarklet();
     return H.panel("The bridge bookmark",
-      H.teach("A few lines of script you run in the PokéRogue tab. It reads the save the game keeps in that tab and hands it to this page. That is all it does.", "note") +
+      H.teach("A few lines of script you run in the PokéRogue tab. It reads the save the game keeps in that tab and hands it to this page.", "note") +
       '<div class="row"><a class="bookmarklet" id="bridge-link" href="' + h(href) + '" data-act="bookmark-click" draggable="true" title="Drag to your bookmarks bar">NZ bridge</a><span class="sub">Drag this to your bookmarks bar.</span></div>' +
       '<div class="row"><button type="button" class="btn small" data-act="copy" data-what="bookmarklet">Copy as a bookmark address</button><button type="button" class="btn small" data-act="copy" data-what="snippet">Copy as a console snippet</button></div>' +
       (bridge.status.manualCopy ? '<label class="field" for="copy-out">Copy this by hand<textarea id="copy-out" class="paste" readonly spellcheck="false">' + h(bridge.status.manualCopy) + '</textarea></label><div class="row"><button type="button" class="btn small" data-act="copy-hide">Hide</button></div>' : "") +
@@ -4083,12 +4082,12 @@ NZ.bridge = (function () {
       '<li><div><strong>Come back here and press Ctrl+V anywhere on this page.</strong><div class="d teach">Or paste into the box.</div></div></li>' +
       '<li><div><strong>On later waves, click Copy save in the game tab and paste again.</strong><div class="d teach">The button stays until you reload the game or close it with ×.</div></div></li></ol>' +
       '<label class="field" for="paste-box">Pasted save<textarea id="paste-box" class="paste" placeholder="Paste here" spellcheck="false"></textarea></label>' +
-      '<div class="row"><button type="button" class="btn" data-act="paste-go">Read the pasted save</button></div>', "works everywhere, one paste per check");
+      '<div class="row"><button type="button" class="btn" data-act="paste-go">Read the pasted save</button></div>', "one paste per check");
   }
 
   function filePanel() {
     return H.panel("Export file",
-      H.teach("No script at all: in the game open Menu, then Manage Data, then Export Session (your run) or Export Data (your unlocks), and drop the <code>.prsv</code> file here. An exported session is the server copy, which the game updates every five waves, so it can be a few waves behind.", "note") +
+      H.teach("Without the script: in the game open Menu, then Manage Data, then Export Session (your run) or Export Data (your unlocks), and drop the <code>.prsv</code> file here. An exported session is the server copy, which the game updates every five waves, so it can be a few waves behind.", "note") +
       '<div class="drop" id="drop-zone"><strong>Drop .prsv files anywhere on this page</strong><label class="btn" for="file-pick">Choose files</label><input class="sr" type="file" id="file-pick" accept=".prsv,.json,.txt" multiple></div>', "");
   }
 
@@ -4096,7 +4095,7 @@ NZ.bridge = (function () {
     var s = ui.state.settings;
     return H.panel("Settings",
       '<label class="switch"><input type="checkbox" id="set-peek" data-bind="settings.peek"' + (s.peek ? " checked" : "") + "><span>Show hidden enemy details</span></label>" +
-      H.teach("Off: the assistant only uses what the game shows you (species, level, boss bars, shiny, held items) plus what that species can have. On: it also reads each wild Pokémon's real ability, moves and Speed from the save, which the game does not show. Your call.", "sub") +
+      H.teach("Off: the assistant only uses what the game shows you (species, level, boss bars, shiny, held items) plus what that species can have. On: it also reads each wild Pokémon's real ability, moves and Speed from the save, which the game does not show.", "sub") +
       '<label class="switch"><input type="checkbox" id="set-sound" data-bind="settings.sound"' + (s.sound ? " checked" : "") + "><span>Sound when a wave is worth staying for</span></label>" +
       H.teach("Live link only. A short two-note beep for shinies, Pokémon missing from your dex and pieces of the build.", "sub") +
       '<label class="switch"><input type="checkbox" id="set-sound-items" data-bind="settings.soundItems"' + (s.soundItems ? " checked" : "") + (s.sound ? "" : " disabled") + "><span>Also for items worth stealing</span></label>" +
@@ -4105,7 +4104,7 @@ NZ.bridge = (function () {
   }
 
   function samplePanel() {
-    return H.panel("Try it with a sample", H.teach("Example saves in the game's real format, to see what a synced page looks like. They are not your run.", "note") + '<div class="chips">' +
+    return H.panel("Sample saves", H.teach("Example saves in the game's real format, to see what a synced page looks like. They are not your run.", "note") + '<div class="chips">' +
       '<button type="button" class="chip" data-act="sample" data-sample="carry">Carry phase, wave 734</button>' +
       '<button type="button" class="chip" data-act="sample" data-sample="shiny">Running, a shiny on wave 1763</button>' +
       '<button type="button" class="chip" data-act="sample" data-sample="plain">Running, nothing on wave 1764</button>' +
@@ -4114,7 +4113,7 @@ NZ.bridge = (function () {
 
   function aboutPanel() {
     return H.panel("What this page reads and keeps",
-      '<ul class="bullets"><li><strong>Read-only.</strong> The assistant does not play. It cannot press a key, click, or change a save.</li>' +
+      '<ul class="bullets"><li><strong>Read-only.</strong> The page does not play the game: it cannot press a key, click, or change a save.</li>' +
       "<li>From a session save it keeps the wave, your party, held items, balls, money and the wild Pokémon of the current wave. From a system save it keeps starter unlocks and which species you have caught.</li>" +
       "<li>Trainer and secret ids are dropped. Nothing leaves your browser: the decoded summary is stored in this browser only, so a reload keeps it.</li>" +
       "<li>The game writes its save at the start of each wave, so the page is at most one wave behind what you see.</li></ul>" +
@@ -4122,7 +4121,7 @@ NZ.bridge = (function () {
   }
 
   ui.views.sync = function (ctx) {
-    return '<div class="view-head"><p class="eyebrow">Sync</p><h1>Let the assistant read your run</h1><p class="lede">It reads the save the game keeps in your browser. It never sends anything to the game.</p></div>' +
+    return '<div class="view-head"><p class="eyebrow">Sync</p><h1>Sync</h1><p class="lede">The page reads the save the game keeps in your browser. Nothing is sent to the game.</p></div>' +
       '<div class="cols"><div class="col">' + statusPanel(ctx) + bridgePanel() + livePanel() + pastePanel() + filePanel() + '</div><div class="col">' + settingsPanel() + samplePanel() + aboutPanel() + "</div></div>";
   };
 })();
