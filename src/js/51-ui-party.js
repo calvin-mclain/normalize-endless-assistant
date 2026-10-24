@@ -19,7 +19,7 @@
         '</span></div><div class="b-red"><span class="lbl">Reductions</span>' + control + '</div><div class="b-cost"><span class="lbl">Cost</span><strong class="num">' + r.cost + '</strong></div><div class="b-next sub">' + candy + "</div></li>";
     }).join("");
     var verdict = b.over
-      ? H.callout("warn", b.total + " of 15 points: " + b.over + " over", "Buy candy cost reductions until the six fit. Each reduction takes 1 point off a starter that costs more than 1, then halves it. Fully reduced, this team costs " + b.floor + ".")
+      ? H.callout("warn", b.total + " of 15 points: " + b.over + " over", "Fully reduced, this team costs " + b.floor + ". " + H.teach("Buy candy cost reductions until the six fit. Each reduction takes 1 point off a starter that costs more than 1, then halves it.", "", "span"))
       : H.callout("good", b.total + " of 15 points: the team fits", b.total < 15 ? (15 - b.total) + " to spare." : "Exactly on the limit.");
     return H.panel("Starter points", '<div class="meter"><div class="meter-top"><span>Endless gives you 15 starter points</span><strong class="num">' + b.total + " / 15</strong></div>" + bar + "</div>" + verdict +
       '<ul class="budget">' + rows + "</ul>",
@@ -33,8 +33,10 @@
     var markHtml = st === "manual"
       ? H.mark(shown, 'data-act="unlock" data-role="' + role + '" data-id="' + h(c.id) + '" aria-pressed="' + !!manualOn + '" title="Tick when you have it"')
       : H.mark(shown);
+    // the detail is the reason when the check passes (teaching), and the problem when it does not (state)
+    var why = st === "ok" || st === "manual";
     return '<li class="check">' + markHtml + '<div><div class="check-label">' + h(c.label) + (st === "locked" ? " " + H.pill("locked", "todo") : "") + (st === "no" ? " " + H.pill("does not fit", "bad") : "") +
-      "</div>" + (c.detail ? '<div class="check-detail">' + h(c.detail) + "</div>" : "") + "</div></li>";
+      "</div>" + (c.detail ? '<div class="check-detail' + (why ? " teach" : "") + '">' + h(c.detail) + "</div>" : "") + "</div></li>";
   }
 
   function roleCard(role, ctx) {
@@ -53,9 +55,9 @@
     return '<article class="role-card"><div class="role-top"><span class="role-name">' + h(kb.roles[role].name) + "</span>" + status + "</div>" +
       '<label class="field"><span class="sr">Starter for ' + h(kb.roles[role].name) + '</span><select id="pick-' + role + '" data-bind="roster.' + role + '" data-num="1">' + options + "</select></label>" +
       '<div class="mon-id">' + H.typeChips(data.form(id, formIndex).types) + '<span class="cost num">' + (sp.c || "–") + " pts</span>" + (sp.k !== kb.roles[role].pick ? H.pill("alternative", "info") : "") + "</div>" +
-      '<p class="role-job">' + h(kb.roles[role].job) + "</p>" +
+      H.teach(h(kb.roles[role].job), "role-job") +
       '<ul class="checks">' + checks.map(function (c) { return checkRow(role, c); }).join("") + "</ul>" +
-      (need.altNote ? '<p class="sub">' + h(need.altNote) + "</p>" : "") + "</article>";
+      (need.altNote ? H.teach(h(need.altNote), "sub") : "") + "</article>";
   }
 
   function teamPanel() {
@@ -68,22 +70,23 @@
       var items = Object.keys(t.items).map(function (k) { return '<span class="chip">' + h(kb.itemInfo[k].name) + " <small>×" + t.items[k] + "</small></span>"; }).join("");
       return '<div class="team-row"><div class="row between"><span class="team-name">' + h(t.name) + '</span><span class="sub">' + h(t.made) + "</span></div>" +
         '<dl class="kv"><dt>Ability / passive</dt><dd>' + h(t.ability) + " / " + h(t.passive) + "</dd><dt>Nature</dt><dd>" + h(t.nature) + (t.tera ? " · Tera Ghost" : "") + "</dd></dl>" +
-        '<div class="chips">' + moves + '</div><div class="chips">' + items + '</div><p class="note">' + h(t.why) + "</p></div>";
+        '<div class="chips">' + moves + '</div><div class="chips">' + items + "</div>" + H.teach(h(t.why), "note") + "</div>";
     }).join("");
-    return H.panel("What you are building toward", '<p class="note">Four fusions do everything; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.</p><div class="team">' + rows + "</div>", "the final team");
+    return H.panel("What you are building toward", H.teach("Four fusions do everything; the last two slots stay free. In every fusion the Pokémon named first keeps its passive and nature, and the second gives its ability.", "note") +
+      '<div class="team">' + rows + "</div>", "the final team", "", true);
   }
 
   function variantsPanel() {
     var body = kb.variants.map(function (v) {
       return '<div><div class="check-label">' + h(v.name) + '</div><div class="note">' + h(v.change) + " " + h(v.trade) + "</div></div>";
     }).join("");
-    return H.panel("Variants", body, "if you are missing an unlock");
+    return H.panel("Variants", body, "if you are missing an unlock", "", true);
   }
 
   ui.views.party = function (ctx) {
     var syncNote = ctx.system
-      ? H.callout("good", "Unlocks read from your save", "Passives, hidden abilities, natures, egg moves, IVs and candy counts below come from the system save synced " + h(util.ago(ui.game.at)) + ".")
-      : H.callout("plain", "Check your unlocks automatically", 'Sync your save and every tick below fills itself in from your real unlocks. <button type="button" class="btn link" data-act="tab" data-tab="sync">Open Sync</button>');
+      ? H.teach(H.callout("good", "Unlocks read from your save", "Passives, hidden abilities, natures, egg moves, IVs and candy counts below come from the system save synced " + h(util.ago(ui.game.at)) + "."), "", "div")
+      : H.teach(H.callout("plain", "Check your unlocks automatically", 'Sync your save and every tick below fills itself in from your real unlocks. <button type="button" class="btn link" data-act="tab" data-tab="sync">Open Sync</button>'), "", "div");
     var cards = kb.ROLE_ORDER.map(function (role) { return roleCard(role, ctx); }).join("");
     return '<div class="view-head"><p class="eyebrow">Phase 1</p><h1>Party building</h1><p class="lede">Six starters chosen for their passives. Unlock every passive and hidden ability before the run starts: they do not unlock mid-run. Keep the first four unevolved until their fusions.</p></div>' +
       syncNote + budgetPanel(ctx) + '<div class="grid-3">' + cards + "</div>" + '<div class="cols"><div class="col">' + teamPanel() + '</div><div class="col">' + variantsPanel() +

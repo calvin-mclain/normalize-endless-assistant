@@ -16,6 +16,11 @@ assistant tab (`window.opener.postMessage`, game origin checked on receipt). Kee
   roles, steps, shop rules, item notes, troubleshooting), `30-save` (decrypt and normalise saves), `40-42`
   advisor logic (no DOM), `50-61` UI and the bridge, `90-main`.
 - `src/styles.css`, `src/head.html`, `src/body.html`.
+- Two readers: someone learning the build and someone who already runs it. The bar's Explain/Compact toggle
+  (`settings.density`) serves both. Teaching prose (why a check exists, how a step works, what a panel is for)
+  is tagged `teach` (`H.teach(...)` or the class) and hidden in Compact; state (verdicts, ticks, counts, what is
+  missing) is never tagged. Reference panels (rules, background) pass `ref` to `H.panel` and fold in Compact.
+  Tag new prose accordingly, and state each rule in one place.
 - `data/game-data.json` — compact data extracted from PokéRogue `main` 1.12.0.11. `build/build_data.py` made
   it from a raw extraction that is not in this repo.
 - `build/make_samples.mjs` — the sample saves the page offers.

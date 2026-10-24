@@ -112,6 +112,7 @@ NZ.bridge = (function () {
       if (phase && (ui.state.tab === "sync" || ui.state.tab === "party")) ui.state.tab = phase;
     }
     ui.render();
+    if (game.session) ui.hintCompact();
     return changed.join("; ");
   }
 
@@ -228,6 +229,7 @@ NZ.bridge = (function () {
     var phase = adv.detectPhase(ui.context());
     ui.state.tab = phase || "carry";
     ui.persist(); ui.render();
+    ui.hintCompact();
     try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
   }
 

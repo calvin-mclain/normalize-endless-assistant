@@ -241,6 +241,86 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
 }
 
 // =====================================================================================================================
+// 1b. Explain and Compact
+// =====================================================================================================================
+{
+  const { ctx, page, errors } = await fresh();
+  const visible = sel => page.locator(sel).first().isVisible();
+  // elements inside a closed <details> are left out: they are folded, not hidden by the density rule
+  const shownCount = sel => page.locator(sel).evaluateAll(els => els.filter(el => !el.closest("details:not([open])")).length);
+  const hiddenCount = sel => page.locator(sel).evaluateAll(els => els.filter(el => el.offsetParent === null && !el.closest("details:not([open])")).length);
+
+  await check("density: Explain is the default and the teaching prose is on the page", async () => {
+    assert.equal(await page.getAttribute("#density-explain", "aria-pressed"), "true");
+    assert.equal(await page.getAttribute("#view", "data-density"), "explain");
+    assert.ok(await page.locator("#view .teach").count() > 10, "teaching prose is tagged");
+    assert.equal(await visible(".view-head .lede"), true);
+    assert.equal(await visible(".role-card .role-job"), true);
+    assert.equal(await hiddenCount("#view .teach"), 0, "nothing tagged is hidden in Explain");
+  });
+
+  await check("density: Compact hides every tagged line and keeps the state", async () => {
+    await page.click("#density-compact");
+    assert.equal(await page.getAttribute("#density-compact", "aria-pressed"), "true");
+    assert.equal(await page.getAttribute("#view", "data-density"), "compact");
+    assert.equal(await visible(".view-head .lede"), false);
+    const total = await shownCount("#view .teach");
+    assert.ok(total > 10, "teaching prose is still in the markup");
+    assert.equal(await hiddenCount("#view .teach"), total, "every tagged element is hidden");
+    assert.equal(await visible(".role-card .checks .mark"), true, "the ticks stay");
+    assert.match(await text(page, ".meter-top strong"), /\/ 15/, "the budget count stays");
+    // reference panels fold behind a Show toggle and open on demand
+    const variants = page.locator(".panel.ref:has(h2:text('Variants'))");
+    assert.equal(await variants.locator("details").count(), 1);
+    assert.equal(await variants.locator(".check-label").first().isVisible(), false);
+    await variants.locator("summary").click();
+    assert.equal(await variants.locator(".check-label").first().isVisible(), true);
+  });
+
+  await check("density: the verdict, boss desk and checklists survive Compact on the other tabs", async () => {
+    await page.click("#tab-carry");
+    assert.equal(await visible(".steps .step-title"), true);
+    assert.equal(await visible(".step-how"), false);
+    await page.click("#tab-run");
+    assert.equal(await text(page, ".verdict-call"), "Run");
+    await page.locator('button[data-act="boss-pick"]', { hasText: "Slither Wing" }).click();
+    const desk = await text(page, "#boss-panel");
+    assert.match(desk, /Sturdy line/i);
+    assert.match(desk, /Scrappy/, "the per-boss guide note is state, not teaching");
+    assert.equal(await visible("#boss-panel .numbered .d"), false, "the line's step descriptions are teaching");
+    assert.equal(await page.locator(".panel.ref:has(h2:text('Catching')) details").count(), 1, "Catching folds");
+    assert.equal(await visible(".panel:has(h2:text('Shop and money')) table"), true, "the reroll arithmetic stays");
+    assert.equal(await visible(".panel:has(h2:text('Shop and money')) .numbered"), false, "the shop rules are teaching");
+  });
+
+  await check("density: the choice survives a reload and Explain brings the prose back", async () => {
+    await settle(page);
+    await page.reload(); await page.waitForSelector(".view-head");
+    assert.equal(await page.getAttribute("#view", "data-density"), "compact");
+    assert.equal(await visible(".view-head .lede"), false);
+    await page.click("#density-explain");
+    assert.equal(await visible(".view-head .lede"), true);
+    assert.equal(await hiddenCount("#view .teach"), 0);
+    assert.equal(await page.locator(".panel.ref:has(h2:text('Catching')) details").count(), 0, "reference panels unfold in Explain");
+  });
+
+  await check("density: the first synced run points at Compact once", async () => {
+    await page.click("#tab-sync");
+    await page.click('button[data-act="sample"][data-sample="shiny"]');
+    await page.waitForSelector(".toast");
+    assert.match(await page.locator(".toast").last().innerText(), /Compact/);
+    await page.waitForSelector(".toast", { state: "detached", timeout: 6000 });
+    await page.click("#tab-sync");
+    await page.click('button[data-act="sample"][data-sample="carry"]');
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator(".toast", { hasText: "Compact" }).count(), 0, "the hint shows once");
+  });
+
+  await check("no script errors switching density", async () => assert.deepEqual(errors, []));
+  await ctx.close();
+}
+
+// =====================================================================================================================
 // 2. Samples, paste, files
 // =====================================================================================================================
 {

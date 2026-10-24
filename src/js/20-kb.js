@@ -237,17 +237,10 @@ NZ.kb = (function () {
     { t: "One turn before it dies, let it KO a spare Pokémon so Gouot enters without taking a hit.", d: "Gouot must be on the field when the battle ends. Mat Block on its entry turn, Dark Void after." }
   ];
 
+  /* Ball rules live in shopRules; the two-on-the-field rule is step 1 of safeCapture; the free shop is in the Shop panel. */
   var catching = [
     "A shiny on a normal wave: Master Ball it if you cannot afford to lose it. Shinies have a 2× catch bonus, so a Rogue Ball usually works on anything you can weaken first.",
-    "Balls cannot be thrown while two wild Pokémon are on the field. Roar or knock out the other one first.",
-    "Knocking out one wild Pokémon and fleeing the other still opens the shop, with no ball spent."
-  ];
-
-  var ballRoutine = [
-    "After spending a Master Ball: lock the Master tier and reroll until one appears.",
-    "After spending Rogue Balls: reroll for the pack of five.",
-    "When both are stocked, take the other items.",
-    "Running low: catch something that is not a boss with Rogue Balls just to reach a shop."
+    "Running low on balls: catch something that is not a boss with Rogue Balls just to reach a shop."
   ];
 
   var freeSlots = [
@@ -276,7 +269,7 @@ NZ.kb = (function () {
         "Multi-hit moves and Parental Bond kill through Sturdy outright. That is a Normalize or Scrappy problem, not a healing one."
       ] },
     { q: "Doubles stop happening",
-      intro: "Gouot was not on the field when the previous battle ended, or it was fainted or its abilities were suppressed (Gastro Acid, Neutralizing Gas). A fainted or suppressed lure does not count. Once you run, a lure item is never needed: get Gouot back on the field instead. In the carry phase Illuminate is the only lure on the field, so hold a lure item. Forced bosses are never doubles." },
+      intro: "Gouot was not on the field when the previous battle ended, or it was fainted or its abilities were suppressed (Gastro Acid, Neutralizing Gas). A fainted or suppressed lure does not count. Get Gouot back on the field; the Doubles chain panel shows which sources count right now. Forced bosses are never doubles." },
     { q: "The wave started with the wrong Pokémon out",
       intro: "Do not switch the right one straight in: a normal switch takes a hit. Switch to one of your two extra Pokémon and let it be knocked out. The Pokémon you send in after a faint enters without being attacked, so the correct one comes in safely." },
     { q: "Mat Block fails", intro: "It only works on Gouot's first turn after entering the field. Use it on the switch-in turn and Dark Void after." },
@@ -323,7 +316,7 @@ NZ.kb = (function () {
     ROLE_ORDER: ROLE_ORDER, roles: roles, needs: needs, finalTeam: finalTeam, itemInfo: itemInfo, bagTargets: bagTargets,
     steps: steps, bossNotes: bossNotes, eternatusCases: eternatusCases, standardLine: standardLine, safeCapture: safeCapture,
     troubleshooting: troubleshooting, variants: variants, speedNotes: speedNotes, shopRules: shopRules, sources: sources,
-    sturdyLine: sturdyLine, catching: catching, ballRoutine: ballRoutine, freeSlots: freeSlots,
+    sturdyLine: sturdyLine, catching: catching, freeSlots: freeSlots,
     STARTER_POINTS: 15, FINAL_WAVE: 5850
   };
 })();

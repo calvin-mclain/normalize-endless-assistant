@@ -79,14 +79,14 @@
       if (phase === "run" && staller && ctx.session.party.indexOf(staller) !== 0) body += H.callout("warn", staller.name + " is not in slot 1", "The lure roll uses the Pokémon on the field when the battle ends. Keep " + h(staller.name) + " first so it is out after every wave, forced bosses included.");
       if (ls.field.some(function (f) { return f.fainted && f.lures.length === 0; }) || ls.field.some(function (f) { return f.fainted; })) body += H.callout("warn", "A fainted Pokémon's lures do not count", "Revive it before the battle ends.");
     } else {
-      body += '<p class="note">Each lure source on the field when a battle ends divides the odds by 4: a lure ability, a lure passive, or a lure item tier in the bag. The roll uses slot 1, plus slot 2 after a double.</p>' +
+      body += H.teach("Each lure source on the field when a battle ends divides the odds by 4: a lure ability, a lure passive, or a lure item tier in the bag. The roll uses slot 1, plus slot 2 after a double.", "note") +
         '<div class="table-wrap"><table><thead><tr><th>Sources</th><th>Normal wave</th><th>X0 wave</th></tr></thead><tbody>' +
         [0, 1, 2, 3].map(function (n) { return '<tr><th class="num">' + n + "</th><td>" + odds(adv.doubleChance(1, n)) + "</td><td>" + odds(adv.doubleChance(10, n)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
     }
     if (phase === "carry") {
-      body += '<ul class="bullets"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
+      body += '<ul class="bullets teach"><li><strong>Regigigas first, always.</strong> Pumpkaboo or Gourgeist second, for its Illuminate.</li><li>Regigigas has no lure, so until the fast lure fusion lands, Illuminate is the only source: normal waves 1 in 2, X0 waves 1 in 8. A lure item in the bag is one more source while it lasts (normal waves guaranteed, X0 waves 1 in 2). Take a lure when the shop offers one; two tiers at once make X0 waves doubles too. Once Gourgeist has No Guard as well, normal waves are guaranteed without one.</li><li>After a single battle only slot 1 is out, so the next wave rolls without the Illuminate in slot 2.</li></ul>';
     } else {
-      body += '<ul class="bullets"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed, ever. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
+      body += '<ul class="bullets teach"><li><strong>Mega Gouot in slot 1, Teddiurk in slot 2.</strong> Three sources guarantee every wave, X0 included.</li><li>After a forced boss only Gouot is out; its two sources still guarantee the next normal wave, so the chain restarts by itself.</li><li>No lure item is needed, ever. If Teddiurk fainted or was switched out, an X0 wave is 1 in 2 for one wave and the chain picks up again.</li></ul>';
     }
     return H.panel("Doubles chain", body, "who is out when the battle ends");
   }
@@ -118,15 +118,15 @@
       return '<li class="alert">' + H.pill(n.sev === "danger" ? "danger" : "care", n.sev === "danger" ? "bad" : "todo") + "<span><strong>" + h(n.title) + ".</strong> " + h(n.text) + "</span></li>";
     }).join("");
     return '<div class="foe"><div class="foe-top"><span class="foe-name">' + h(data.name(id, formIndex)) + "</span>" + H.typeChips(f.types) + dex + (sp.c ? '<span class="sub num">starter · ' + sp.c + " pts</span>" : "") + "</div>" + forms +
-      '<dl class="kv"><dt>Abilities</dt><dd>' + abilities.join(", ") + "</dd><dt>Passive</dt><dd>" + H.ab(data.passive(id, formIndex)) + ' <span class="sub">(bosses and unlocked starters only)</span></dd><dt>Base Speed</dt><dd class="num">' + f.stats[5] + "</dd></dl>" +
+      '<dl class="kv"><dt>Abilities</dt><dd>' + abilities.join(", ") + "</dd><dt>Passive</dt><dd>" + H.ab(data.passive(id, formIndex)) + " " + H.teach("(bosses and unlocked starters only)", "sub", "span") + '</dd><dt>Base Speed</dt><dd class="num">' + f.stats[5] + "</dd></dl>" +
       '<h3 class="h">For your build</h3>' + list +
       (threat ? H.details("scout-threat", "If you had to fight it as a boss", '<ul class="alerts">' + threat + "</ul>") : "") +
-      H.details("scout-moves", "Level-up moves (" + lm.length + ")", '<div class="chips">' + moveChips + '</div><p class="sub">Wild Pokémon only know level-up moves. A fused Pokémon can relearn any of these with a Memory Mushroom.</p>') + "</div>";
+      H.details("scout-moves", "Level-up moves (" + lm.length + ")", '<div class="chips">' + moveChips + "</div>" + H.teach("Wild Pokémon only know level-up moves. A fused Pokémon can relearn any of these with a Memory Mushroom.", "sub")) + "</div>";
   }
 
   function scoutPanel(ctx, phase) {
     var st = ui.state;
-    var card = st.scout ? scoutCard(st.scout, st.scoutForm || 0, ctx, phase) : '<p class="sub">Type a wild Pokémon\'s name to see what it offers: moves for an open splice step, a Sturdy or lure ability, or a free-slot role.</p>';
+    var card = st.scout ? scoutCard(st.scout, st.scoutForm || 0, ctx, phase) : H.teach("Type a wild Pokémon's name to see what it offers: moves for an open splice step, a Sturdy or lure ability, or a free-slot role.", "sub");
     return H.panel("Scout a Pokémon", '<label class="field" for="scout-q">Species<input type="search" id="scout-q" data-live="scout" autocomplete="off" placeholder="Throh, Golurk, Garganacl…"></label><div id="scout-hits" class="chips"></div><div id="scout-card">' + card + "</div>",
       "from game data, no sync needed", ' id="scout-panel"');
   }

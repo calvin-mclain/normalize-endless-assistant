@@ -17,9 +17,11 @@ NZ.ui = (function () {
       run: { wave: 1001, gas: false, want: false, boss: 0, bossSteps: {}, rerolls: 0 },
       speed: { level: 2300, carbos: 31, soulDew: 10 },
       scout: 0, scoutForm: 0, // species (and form) shown in the scout card
-      settings: { peek: false, sound: false, soundItems: false, gameUrl: "https://pokerogue.net/" }
+      // density: "explain" shows the teaching prose (class "teach"); "compact" hides it and folds reference panels
+      settings: { peek: false, sound: false, soundItems: false, gameUrl: "https://pokerogue.net/", density: "explain", hintedCompact: false }
     };
   }
+  var DENSITIES = ["explain", "compact"];
 
   var state = defaultState();
   var game = { session: null, system: null, at: 0, via: "", sample: false };
@@ -54,6 +56,7 @@ NZ.ui = (function () {
   function load() {
     state = merge(defaultState(), util.store.get(STATE_KEY, null));
     if (TABS.indexOf(state.tab) === -1) state.tab = "party";
+    if (DENSITIES.indexOf(state.settings.density) === -1) state.settings.density = "explain";
     var g = util.store.get(GAME_KEY, null);
     if (g && typeof g === "object") {
       game.session = g.session && g.session.kind === "session" ? g.session : null;
@@ -108,8 +111,20 @@ NZ.ui = (function () {
   function details(id, summary, body, cls) {
     return '<details data-open-id="' + h(id) + '"' + (state.open[id] ? " open" : "") + (cls ? ' class="' + cls + '"' : "") + "><summary>" + summary + '</summary><div class="details-body">' + body + "</div></details>";
   }
-  function panel(title, body, meta, attrs) {
-    return '<section class="panel"' + (attrs || "") + '><div class="panel-h"><h2>' + h(title) + "</h2>" + (meta ? '<span class="meta">' + meta + "</span>" : "") + '</div><div class="panel-b">' + body + "</div></section>";
+  function compact() { return state.settings.density === "compact"; }
+  /** Teaching prose: shown in Explain, hidden in Compact. `tag` defaults to a paragraph; `cls` is the usual text class. */
+  function teach(html, cls, tag) {
+    tag = tag || "p";
+    return "<" + tag + ' class="teach' + (cls ? " " + cls : "") + '">' + html + "</" + tag + ">";
+  }
+  /** A panel. `ref` marks reference material (rules, background): in Compact its body folds behind a "Show" toggle. */
+  function panel(title, body, meta, attrs, ref) {
+    var cls = "panel" + (ref ? " ref" : "");
+    if (ref && compact()) {
+      var id = "ref-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      body = details(id, "Show", body);
+    }
+    return '<section class="' + cls + '"' + (attrs || "") + '><div class="panel-h"><h2>' + h(title) + "</h2>" + (meta ? '<span class="meta">' + meta + "</span>" : "") + '</div><div class="panel-b">' + body + "</div></section>";
   }
   function callout(kind, title, text) {
     return '<div class="callout ' + kind + '">' + (title ? '<div class="t">' + h(title) + "</div>" : "") + (text ? "<div>" + text + "</div>" : "") + "</div>";
@@ -159,7 +174,13 @@ NZ.ui = (function () {
         '</span><span class="phase-label"><span class="long">' + t[1] + '</span><span class="short">' + t[2] + "</span></span>" + (detected === t[0] ? '<span class="here" title="Your synced save is in this phase"></span>' : "") + "</button>";
     });
     var sl = syncLabel();
-    html += '</nav><button type="button" class="sync-pill" id="tab-sync" role="tab" aria-selected="' + (state.tab === "sync") + '" data-act="tab" data-tab="sync"><span class="dot ' + sl.cls + '"></span><span>' + h(sl.text) + "</span></button></div>";
+    html += '</nav><div class="bar-right"><div class="density" role="group" aria-label="How much to explain" id="density">' +
+      DENSITIES.map(function (d) {
+        var on = state.settings.density === d;
+        return '<button type="button" class="density-btn" id="density-' + d + '" data-act="density" data-density="' + d + '" aria-pressed="' + on + '" title="' +
+          (d === "explain" ? "Show the reasoning behind every check and step" : "Only the state: verdicts, ticks and counts") + '">' + (d === "explain" ? "Explain" : "Compact") + "</button>";
+      }).join("") + "</div>" +
+      '<button type="button" class="sync-pill" id="tab-sync" role="tab" aria-selected="' + (state.tab === "sync") + '" data-act="tab" data-tab="sync"><span class="dot ' + sl.cls + '"></span><span>' + h(sl.text) + "</span></button></div></div>";
     return html;
   }
 
@@ -174,6 +195,7 @@ NZ.ui = (function () {
       try { keep.start = active.selectionStart; keep.end = active.selectionEnd; } catch (e) { /* not a text field */ }
     }
     var ctx = context();
+    view.setAttribute("data-density", state.settings.density);
     bar.innerHTML = renderBar(ctx);
     var fn = views[state.tab] || views.party;
     var banner = "";
@@ -267,6 +289,19 @@ NZ.ui = (function () {
   }
 
   on("tab", function (t) { setTab(t.getAttribute("data-tab")); });
+  on("density", function (t) { setDensity(t.getAttribute("data-density")); });
+  function setDensity(d) {
+    if (DENSITIES.indexOf(d) === -1 || state.settings.density === d) return;
+    state.settings.density = d;
+    persist(); render();
+  }
+  /** Once, after the first synced run: point at Compact, since a synced save means the reader is at the table. */
+  function hintCompact() {
+    if (state.settings.hintedCompact || state.settings.density !== "explain") return;
+    state.settings.hintedCompact = true;
+    persist();
+    toast("Know the build already? Compact, in the top bar, hides the explanations.");
+  }
   on("step", function (t) {
     var path = t.getAttribute("data-bind");
     var cur = Number(getPath(path)) || 0;
@@ -277,9 +312,9 @@ NZ.ui = (function () {
   return {
     get state() { return state; }, get game() { return game; },
     views: views, load: load, persist: persist, context: context, render: render, wire: wire, on: on, bind: bind, live: live, lazy: lazy,
-    setTab: setTab, toast: toast, getPath: getPath, setPath: setPath,
+    setTab: setTab, setDensity: setDensity, hintCompact: hintCompact, compact: compact, toast: toast, getPath: getPath, setPath: setPath,
     html: { typeChips: typeChips, ab: ab, pill: pill, moveChip: moveChip, monChip: monChip, mark: mark, segbar: segbar,
-      details: details, panel: panel, callout: callout, stepper: stepper, monHead: monHead },
+      details: details, panel: panel, callout: callout, stepper: stepper, monHead: monHead, teach: teach },
     resetGame: function () { game.session = null; game.system = null; game.at = 0; game.via = ""; game.sample = false; },
     resetState: function () { state = defaultState(); }
   };

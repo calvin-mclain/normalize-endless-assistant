@@ -7,7 +7,8 @@
     var s = ctx.session;
     if (!s) {
       return H.panel("This wave", H.callout("plain", "Nothing synced yet",
-        'With a synced save this panel lists the wild Pokémon in front of you and flags the ones the build needs: a move for an open splice step, a Sturdy or lure ability, or Carbos to dump. <button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="carry">look at a sample wave</button>.'), "");
+        H.teach("With a synced save this panel lists the wild Pokémon in front of you and flags the ones the build needs: a move for an open splice step, a Sturdy or lure ability, or Carbos to dump. ", "", "span") +
+        '<button type="button" class="btn link" data-act="tab" data-tab="sync">Set up sync</button> or <button type="button" class="btn link" data-act="sample" data-sample="carry">look at a sample wave</button>.'), "");
     }
     var info = adv.waveInfo(s.wave);
     var scans = s.enemies.map(function (e) { return adv.scanEnemy(e, ctx, "carry"); });
@@ -31,12 +32,12 @@
     ];
     var rows = kit.map(function (k) {
       var st = m ? (k.keys.some(function (key) { return adv.knows(m, key); }) ? "ok" : "locked") : "manual";
-      return '<li class="check">' + H.mark(st === "manual" ? "info" : st) + '<div><div class="check-label">' + h(k.label) + '</div><div class="check-detail">' + h(k.why) + "</div></div></li>";
+      return '<li class="check">' + H.mark(st === "manual" ? "info" : st) + '<div><div class="check-label">' + h(k.label) + '</div><div class="check-detail teach">' + h(k.why) + "</div></div></li>";
     }).join("");
     var name = m ? m.name : data.sp(ctx.roster.carry).n;
     var merged = ctx.assign.flags.carry && ctx.assign.flags.carry.mergedInto;
     if (merged) return H.panel("Carry kit", H.callout("good", "The carry is fused", "It now lives inside " + h(ctx.assign.flags.carry.member.name) + ". You are past the carry phase."), "");
-    return H.panel("Carry kit", '<ul class="checks">' + rows + "</ul>" + '<p class="note">' + h(name) + " should clear every double by itself. Abuse Endure; skip Rare Candies and Candy Jars.</p>", h(name));
+    return H.panel("Carry kit", '<ul class="checks">' + rows + "</ul>" + H.teach(h(name) + " should clear every double by itself. Abuse Endure; skip Rare Candies and Candy Jars.", "note"), h(name));
   }
 
   function candidateHtml(step, ctx) {
@@ -47,7 +48,7 @@
       out += '<div><div class="group-title">' + h(g.title) + " (" + g.rows.length + ')</div><div class="chips">' +
         g.rows.map(function (r) { return H.monChip(r.id, r.form, r.sub, r.weak || g.weak); }).join("") + "</div></div>";
     });
-    if (step.kind === "learn" && !step.from) out += '<p class="sub">A wild one may not have the move in its four. Fused, your Pokémon can relearn it from the partner\'s level-up list with a Memory Mushroom.</p>';
+    if (step.kind === "learn" && !step.from) out += H.teach("A wild one may not have the move in its four. Fused, your Pokémon can relearn it from the partner's level-up list with a Memory Mushroom.", "sub");
     return out || '<p class="sub">No candidates in the data.</p>';
   }
 
@@ -65,15 +66,15 @@
       H.mark(done ? "ok" : "todo", 'data-act="step-toggle" data-id="' + step.id + '" aria-pressed="' + done + '" aria-label="' + h(step.title) + (done ? ": done" : ": to do") + '"') +
       '<div><div class="step-title"><span class="step-n">' + (index + 1) + '</span><span class="who">' + h(kb.roles[step.who].name) + '</span><span class="t">' + h(step.title) + "</span>" +
       (step.rare ? H.pill("rare carrier", "todo") : "") + (step.sketch ? H.pill("can be sketched", "quiet") : "") + src + "</div>" +
-      (done ? "" : '<div class="step-how">' + h(step.how) + "</div>") + detail + bar + cand + "</div></li>";
+      (done ? "" : '<div class="step-how teach">' + h(step.how) + "</div>") + detail + bar + cand + "</div></li>";
   }
 
   function splicePanel(ctx) {
     var done = kb.steps.filter(function (s) { return adv.effectiveStep(s, ctx).state === "done"; }).length;
     var rows = kb.steps.map(function (s, i) { return stepRow(s, i, ctx); }).join("");
-    return H.panel("Splice list", '<div class="meter"><div class="meter-top"><span>In the guide\'s priority order. A rarer carrier jumps the queue when it shows up.</span><strong class="num">' + done + " / " + kb.steps.length + "</strong></div>" +
+    return H.panel("Splice list", '<div class="meter"><div class="meter-top"><span>' + H.teach("In the guide's priority order. A rarer carrier jumps the queue when it shows up.", "", "span") + '</span><strong class="num">' + done + " / " + kb.steps.length + "</strong></div>" +
       '<span class="segbar go" aria-hidden="true">' + kb.steps.map(function (s) { return "<i" + (adv.effectiveStep(s, ctx).state === "done" ? ' class="on"' : "") + "></i>"; }).join("") + "</span></div>" +
-      '<p class="note">Unsplice means: fuse, learn the move, unfuse. The first Pokémon keeps its passive; the second gives its ability and is used up.</p><ol class="steps">' + rows + "</ol>",
+      H.teach("Unsplice means: fuse, learn the move, unfuse. The first Pokémon keeps its passive; the second gives its ability and is used up.", "note") + '<ol class="steps">' + rows + "</ol>",
       ctx.session ? "ticks follow your save" : "tick by hand, or sync");
   }
 
@@ -97,8 +98,8 @@
       '</div><div class="audit-row"><span>Rogue Balls</span><span class="cnt">' + audit.balls.rogue + "</span><span></span></div>" : "";
     var meter = '<div class="meter"><div class="meter-top"><span>' + (left.length ? (phase === "run" ? "Still to collect while you run: " : "Still to collect: ") + left.map(function (row) { return h(row.name); }).join(", ") : "Every item target is met.") +
       '</span><strong class="num">' + (all.length - left.length) + " / " + all.length + "</strong></div>" + H.segbar(all.length - left.length, all.length, "go") + "</div>";
-    var note = phase === "run" ? '<p class="sub">Eggs and Grip Claws come off wild Pokémon only: Thief or Mini Black Hole whatever carries one, or catch it. Vitamins cannot be stolen; Carbos come through fuse-and-dump.</p>'
-      : '<p class="sub">Don\'t wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.</p>';
+    var note = phase === "run" ? H.teach("Eggs and Grip Claws come off wild Pokémon only: Thief or Mini Black Hole whatever carries one, or catch it. Vitamins cannot be stolen; Carbos come through fuse-and-dump.", "sub")
+      : H.teach("Don't wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.", "sub");
     return H.panel("Items", meter + '<div class="audit">' + roles + '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div></div>" + note,
       audit.synced ? "counted from your save" : "set counts by hand, or sync", ' id="items-' + (phase || "carry") + '"');
   }
@@ -112,8 +113,8 @@
       }).join("");
     }
     var head = r.ready ? H.callout("good", "Ready to run", "Every must-have is in place.")
-      : r.known ? H.callout("warn", r.open + " must-have" + (r.open === 1 ? "" : "s") + " open", "Regigigas can carry well past wave 2000 if you need longer, but the earlier you run the better.")
-        : H.callout("plain", "Sync to check this for you", "Without a save, tick the splice list by hand and judge these yourself.");
+      : r.known ? H.callout("warn", r.open + " must-have" + (r.open === 1 ? "" : "s") + " open", H.teach("Regigigas can carry well past wave 2000 if you need longer, but the earlier you run the better.", "", "span"))
+        : H.teach(H.callout("plain", "Sync to check this for you", "Without a save, tick the splice list by hand and judge these yourself."), "", "div");
     return H.panel("Ready to run?", head + '<h3 class="h">Must have</h3><ul class="checks">' + rows("need") + '</ul><h3 class="h">Good to have</h3><ul class="checks">' + rows("nice") +
       '</ul><div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="run">Start running</button></div>', "");
   }

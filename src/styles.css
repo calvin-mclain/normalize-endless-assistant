@@ -159,6 +159,17 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .phase-btn[aria-selected="true"] .here { background: var(--accent-ink); }
 .phase-label { overflow: hidden; text-overflow: ellipsis; }
 .phase-label .short { display: none; }
+.bar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.density { display: inline-flex; }
+.density-btn {
+  padding: 7px 10px; border: 2px solid var(--line); border-left-width: 0; background: var(--raised); cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--ink-3); white-space: nowrap;
+}
+.density-btn:first-child { border-left-width: 2px; border-radius: var(--r) 0 0 var(--r); }
+.density-btn:last-child { border-radius: 0 var(--r) var(--r) 0; }
+.density-btn:hover { color: var(--ink); }
+.density-btn[aria-pressed="true"] { background: var(--khaki-soft); border-color: var(--khaki); color: var(--khaki); }
+.density-btn[aria-pressed="true"] + .density-btn { border-left-color: var(--khaki); }
 .sync-pill {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 7px 12px; border: 2px solid var(--line); border-radius: var(--r);
@@ -190,6 +201,10 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .panel.flat { background: transparent; border-style: dashed; }
 .sub { font-size: 13px; color: var(--ink-3); }
 .note { font-size: 13.5px; color: var(--ink-2); }
+/* Density. Teaching prose is tagged .teach wherever it appears; Compact hides it and folds reference panels (.panel.ref). */
+[data-density="compact"] .teach { display: none !important; }
+[data-density="compact"] .view-head .lede { display: none; }
+[data-density="compact"] .panel.ref > .panel-b > details > summary { font-size: 13px; }
 h3.h { font-size: 13px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
 
 /* ---------- small parts ---------- */
@@ -439,6 +454,8 @@ textarea.paste { width: 100%; min-height: 64px; resize: vertical; font-family: v
   .audit-row { grid-template-columns: minmax(0, 1fr) auto; }
   .audit-row .segbar { display: none; }
   .bar-in { justify-content: space-between; }
+  .bar-right { margin-left: 0; flex: 1 1 auto; justify-content: space-between; }
+  .density-btn { padding: 6px 8px; font-size: 12.5px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .toast { animation: rise 0.18s ease-out; }
