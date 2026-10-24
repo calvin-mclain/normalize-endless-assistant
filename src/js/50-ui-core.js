@@ -16,7 +16,8 @@ NZ.ui = (function () {
       open: {},               // which <details> are open
       run: { wave: 1001, gas: false, want: false, boss: 0, bossSteps: {}, rerolls: 0 },
       speed: { level: 2300, carbos: 31, soulDew: 10 },
-      scout: 0, scoutForm: 0, // species (and form) shown in the scout card
+      scout: 0, scoutForm: 0, // species (and form) shown in the Pokédex
+      dex: { open: false, pinned: false }, // the Pokédex popover; pinned keeps it open across clicks elsewhere
       // density: "explain" shows the teaching prose (class "teach"); "compact" hides it and folds reference panels
       settings: { peek: false, sound: false, soundItems: false, gameUrl: "https://pokerogue.net/", density: "explain", hintedCompact: false }
     };
@@ -57,6 +58,7 @@ NZ.ui = (function () {
     state = merge(defaultState(), util.store.get(STATE_KEY, null));
     if (TABS.indexOf(state.tab) === -1) state.tab = "party";
     if (DENSITIES.indexOf(state.settings.density) === -1) state.settings.density = "explain";
+    if (!state.dex.pinned) state.dex.open = false;
     var g = util.store.get(GAME_KEY, null);
     if (g && typeof g === "object") {
       game.session = g.session && g.session.kind === "session" ? g.session : null;
@@ -193,7 +195,7 @@ NZ.ui = (function () {
         '</span><span class="phase-label"><span class="long">' + t[1] + '</span><span class="short">' + t[2] + "</span></span>" + (detected === t[0] ? '<span class="here" title="Your synced save is in this phase"></span>' : "") + "</button>";
     });
     var sl = syncLabel();
-    html += '</nav><div class="bar-right"><div class="density" role="group" aria-label="How much to explain" id="density">' +
+    html += '</nav><div class="bar-right"><button type="button" class="dex-btn" id="dex-btn" data-act="dex-toggle" aria-pressed="' + !!state.dex.open + '" aria-controls="dex" title="Look up a species">Pokédex</button><div class="density" role="group" aria-label="How much to explain" id="density">' +
       DENSITIES.map(function (d) {
         var on = state.settings.density === d;
         return '<button type="button" class="density-btn" id="density-' + d + '" data-act="density" data-density="' + d + '" aria-pressed="' + on + '" title="' +
@@ -204,10 +206,10 @@ NZ.ui = (function () {
   }
 
   function render() {
-    var bar = document.getElementById("bar"), view = document.getElementById("view");
+    var bar = document.getElementById("bar"), view = document.getElementById("view"), dex = document.getElementById("dex");
     if (!bar || !view) return;
     var active = document.activeElement, keep = null;
-    if (active && active.id && view.contains(active)) {
+    if (active && active.id && (view.contains(active) || (dex && dex.contains(active)))) {
       // free-typed fields (the scout box, the paste box) keep their text; bound fields are redrawn from state
       var typed = /^(INPUT|TEXTAREA)$/.test(active.tagName) && !active.getAttribute("data-bind") && active.type !== "checkbox" && active.type !== "file";
       keep = { id: active.id, start: null, end: null, value: typed ? active.value : null };
@@ -220,6 +222,7 @@ NZ.ui = (function () {
     var banner = "";
     if (game.sample) banner = '<div class="banner sample"><span><strong>Sample save loaded.</strong> These Pokémon and numbers are an example, not your run.</span><button type="button" class="btn small" data-act="clear-sample">Remove sample</button></div>';
     view.innerHTML = banner + fn(ctx) + footer();
+    renderDex(ctx, bar, dex);
     if (keep) {
       var el = document.getElementById(keep.id);
       if (el) {
@@ -234,9 +237,36 @@ NZ.ui = (function () {
     }
   }
 
+  /** The Pokédex popover: a fixed panel under the bar. dexView (set by the field module) builds its body. */
+  var dexView = null;
+  function renderDex(ctx, bar, dex) {
+    if (!dex) return;
+    dex.setAttribute("data-density", state.settings.density);
+    if (!state.dex.open || !dexView) { dex.hidden = true; dex.innerHTML = ""; return; }
+    dex.hidden = false;
+    dex.style.top = Math.round(bar.getBoundingClientRect().bottom + 8) + "px";
+    dex.innerHTML = '<div class="dex-h"><h2>Pokédex</h2><span class="row">' +
+      '<button type="button" class="btn small" id="dex-pin" data-act="dex-pin" aria-pressed="' + !!state.dex.pinned + '" title="' + (state.dex.pinned ? "Unpin: close when you click elsewhere" : "Pin: stay open when you click elsewhere") + '">' + (state.dex.pinned ? "Pinned" : "Pin") + "</button>" +
+      '<button type="button" class="btn small" id="dex-close" data-act="dex-close" aria-label="Close">×</button></span></div>' + dexView(ctx);
+  }
+  function openDex(focusSearch) {
+    state.dex.open = true;
+    persist(); render();
+    if (focusSearch) { var q = document.getElementById("scout-q"); if (q) q.focus({ preventScroll: true }); }
+  }
+  function closeDex() {
+    if (!state.dex.open) return;
+    state.dex.open = false;
+    persist(); render();
+  }
+  function inDex(el) {
+    var dex = document.getElementById("dex");
+    return !!(dex && el && dex.contains(el));
+  }
+
   function footer() {
     return '<footer class="foot"><div>Game data: PokéRogue ' + h(data.meta.version) + " (live branch, commit " + h(data.meta.commit) + "), extracted " + h(data.meta.extracted) +
-      ". Strategy: Grex's Endless Entrainment Normalize Build and your project guide.</div><div>A fan-made helper. It reads save data you hand it and never sends input to the game.</div></footer>";
+      ". Strategy: Grex's Endless Entrainment Normalize Build and your project guide.</div><div>Unofficial. It reads the save data you give it and sends nothing to the game.</div></footer>";
   }
 
   var toastBox = null;
@@ -265,6 +295,7 @@ NZ.ui = (function () {
   function lazy(prefix, fn) { lazies[prefix] = fn; }
 
   function wire() {
+    wireDex();
     document.addEventListener("click", function (e) {
       var t = e.target.closest ? e.target.closest("[data-act]") : null;
       if (!t) return;
@@ -308,6 +339,32 @@ NZ.ui = (function () {
   }
 
   on("tab", function (t) { setTab(t.getAttribute("data-tab")); });
+  on("dex-toggle", function () { if (state.dex.open) closeDex(); else openDex(true); });
+  on("dex-close", function () { closeDex(); });
+  on("dex-pin", function () { state.dex.pinned = !state.dex.pinned; persist(); render(); });
+  function wireDex() {
+    // unpinned, the Pokédex closes when attention goes elsewhere: a click or keyboard focus outside it (species chips reopen it anyway)
+    // on click, not pointerdown: closing re-renders the page, and a re-render between mousedown and mouseup would swallow the click
+    document.addEventListener("click", function (e) {
+      if (!state.dex.open || state.dex.pinned) return;
+      var t = e.target.closest ? e.target.closest("#dex, #dex-btn, [data-act=\"scout\"]") : null;
+      if (!t) closeDex();
+    });
+    // focus moved by a pointer is handled by the click above; acting on it here would re-render mid-click and swallow the click
+    var pointerDown = false;
+    document.addEventListener("pointerdown", function () { pointerDown = true; }, true);
+    document.addEventListener("pointerup", function () { pointerDown = false; }, true);
+    document.addEventListener("pointercancel", function () { pointerDown = false; }, true);
+    document.addEventListener("focusin", function (e) {
+      if (!state.dex.open || state.dex.pinned || pointerDown) return;
+      var t = e.target;
+      if (!t || t === document.body || inDex(t) || (t.closest && t.closest("#dex-btn, [data-act=\"scout\"]"))) return;
+      closeDex();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && state.dex.open) { closeDex(); var b = document.getElementById("dex-btn"); if (b) b.focus(); }
+    });
+  }
   on("density", function (t) { setDensity(t.getAttribute("data-density")); });
   function setDensity(d) {
     if (DENSITIES.indexOf(d) === -1 || state.settings.density === d) return;
@@ -319,7 +376,7 @@ NZ.ui = (function () {
     if (state.settings.hintedCompact || state.settings.density !== "explain") return;
     state.settings.hintedCompact = true;
     persist();
-    toast("Know the build already? Compact, in the top bar, hides the explanations.");
+    toast("Compact, in the top bar, hides the explanations.");
   }
   on("step", function (t) {
     var path = t.getAttribute("data-bind");
@@ -331,7 +388,7 @@ NZ.ui = (function () {
   return {
     get state() { return state; }, get game() { return game; },
     views: views, load: load, persist: persist, context: context, render: render, wire: wire, on: on, bind: bind, live: live, lazy: lazy,
-    setTab: setTab, setDensity: setDensity, hintCompact: hintCompact, compact: compact, toast: toast, getPath: getPath, setPath: setPath,
+    setTab: setTab, setDensity: setDensity, openDex: openDex, closeDex: closeDex, set dexView(fn) { dexView = fn; }, hintCompact: hintCompact, compact: compact, toast: toast, getPath: getPath, setPath: setPath,
     html: { typeChips: typeChips, ab: ab, pill: pill, moveChip: moveChip, monChip: monChip, mark: mark, segbar: segbar,
       details: details, panel: panel, callout: callout, stepper: stepper, monHead: monHead, teach: teach },
     visibleEvents: visibleEvents, eventLine: eventLine, dayLabel: dayLabel,

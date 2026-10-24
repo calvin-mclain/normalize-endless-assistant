@@ -36,8 +36,8 @@
     }).join("");
     var name = m ? m.name : data.sp(ctx.roster.carry).n;
     var merged = ctx.assign.flags.carry && ctx.assign.flags.carry.mergedInto;
-    if (merged) return H.panel("Carry kit", H.callout("good", "The carry is fused", "It now lives inside " + h(ctx.assign.flags.carry.member.name) + ". You are past the carry phase."), "");
-    return H.panel("Carry kit", '<ul class="checks">' + rows + "</ul>" + H.teach(h(name) + " should clear every double by itself. Abuse Endure; skip Rare Candies and Candy Jars.", "note"), h(name));
+    if (merged) return H.panel("Carry kit", H.callout("good", "The carry is fused", "It is now part of " + h(ctx.assign.flags.carry.member.name) + ": the carry phase is over."), "");
+    return H.panel("Carry kit", '<ul class="checks">' + rows + "</ul>" + H.teach(h(name) + " clears every double by itself. Use Endure freely; skip Rare Candies and Candy Jars.", "note"), h(name));
   }
 
   function candidateHtml(step, ctx) {
@@ -75,7 +75,7 @@
     return H.panel("Splice list", '<div class="meter"><div class="meter-top"><span>' + H.teach("In the guide's priority order. A rarer carrier jumps the queue when it shows up.", "", "span") + '</span><strong class="num">' + done + " / " + kb.steps.length + "</strong></div>" +
       '<span class="segbar go" aria-hidden="true">' + kb.steps.map(function (s) { return "<i" + (adv.effectiveStep(s, ctx).state === "done" ? ' class="on"' : "") + "></i>"; }).join("") + "</span></div>" +
       H.teach("Unsplice means: fuse, learn the move, unfuse. The first Pokémon keeps its passive; the second gives its ability and is used up.", "note") + '<ol class="steps">' + rows + "</ol>",
-      ctx.session ? "ticks follow your save" : "tick by hand, or sync");
+      ctx.session ? "from your save" : "tick by hand, or sync");
   }
 
   /** Item targets for the final team. phase: "carry" or "run"; the Running tab shows the same counts so eggs can be tracked without switching back. */
@@ -101,7 +101,7 @@
     var meter = '<div class="meter"><div class="meter-top"><span>' + (left.length ? (onlyOpen ? "Still to collect while you run; the rest is met." : "Still to collect: " + left.map(function (row) { return h(row.name); }).join(", ")) : "Every item target is met.") +
       '</span><strong class="num">' + (all.length - left.length) + " / " + all.length + "</strong></div>" + H.segbar(all.length - left.length, all.length, "go") + "</div>";
     var note = phase === "run" ? H.teach("Eggs and Grip Claws come off wild Pokémon only: Thief or Mini Black Hole whatever carries one, or catch it. Vitamins cannot be stolen; Carbos come through fuse-and-dump.", "sub")
-      : H.teach("Don't wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.", "sub");
+      : H.teach("Start running before every egg is collected and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.", "sub");
     var bagBlock = bag || balls ? '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div>" : "";
     return H.panel("Items", meter + (roles || bagBlock ? '<div class="audit">' + roles + bagBlock + "</div>" : "") + note,
       audit.synced ? "counted from your save" : "set counts by hand, or sync", ' id="items-' + (phase || "carry") + '"');
@@ -117,14 +117,14 @@
     }
     var head = r.ready ? H.callout("good", "Ready to run", "Every must-have is in place.")
       : r.known ? H.callout("warn", r.open + " must-have" + (r.open === 1 ? "" : "s") + " open", H.teach("Regigigas can carry well past wave 2000 if you need longer, but the earlier you run the better.", "", "span"))
-        : H.teach(H.callout("plain", "Sync to check this for you", "Without a save, tick the splice list by hand and judge these yourself."), "", "div");
-    return H.panel("Ready to run?", head + '<h3 class="h">Must have</h3><ul class="checks">' + rows("need") + '</ul><h3 class="h">Good to have</h3><ul class="checks">' + rows("nice") +
-      '</ul><div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="run">Start running</button></div>', "");
+        : H.teach(H.callout("plain", "Not synced", "Without a save, tick the splice list by hand and judge these yourself."), "", "div");
+    return H.panel("Readiness", head + '<h3 class="h">Must have</h3><ul class="checks">' + rows("need") + '</ul><h3 class="h">Good to have</h3><ul class="checks">' + rows("nice") +
+      '</ul><div class="row"><button type="button" class="btn primary" data-act="tab" data-tab="run">Continue to Running</button></div>', "");
   }
 
   ui.views.carry = function (ctx) {
     return '<div class="view-head"><p class="eyebrow">Phase 2 · waves 1 to about 1000</p><h1>Carry</h1><p class="lede">Regigigas kills every double battle with one spread move while the other five learn their moves through fusions. The whole setup can be done by wave 1000.</p></div>' +
-      '<div class="cols"><div class="col">' + nowPanel(ctx) + splicePanel(ctx) + '</div><div class="col">' + F.lurePanel(ctx, "carry") + carryKit(ctx) + F.scoutPanel(ctx, "carry") + itemsPanel(ctx, "carry") + readyPanel(ctx) + "</div></div>";
+      '<div class="cols"><div class="col">' + nowPanel(ctx) + splicePanel(ctx) + '</div><div class="col">' + F.lurePanel(ctx, "carry") + carryKit(ctx) + itemsPanel(ctx, "carry") + readyPanel(ctx) + "</div></div>";
   };
 
   ui.on("step-toggle", function (t) {

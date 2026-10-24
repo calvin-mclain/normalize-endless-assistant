@@ -228,7 +228,7 @@ assert.ok(v.reasons.some(r => /not in your dex/.test(r.text)));
   sysP.abilities[d.root(pel.species)] = 0;
   v = adv.verdict(adv.makeContext({ session: plain, roster, system: sysP }));
   assert.equal(v.action, "stay");
-  const why = v.catches.find(r => /is new to your dex/.test(r.text));
+  const why = v.catches.find(r => /something new for your dex/.test(r.text));
   assert.ok(why, JSON.stringify(v.catches));
   assert.ok(!/abilit|gender|shiny|form|female|male/i.test(why.text), "says that something is new, not what");
 }

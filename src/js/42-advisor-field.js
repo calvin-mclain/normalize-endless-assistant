@@ -337,7 +337,7 @@
     if (ctx.system && data.sp(enemy.species)) {
       var caught = ctx.system.caught.indexOf(enemy.species) !== -1;
       if (!caught) add("want", data.sp(enemy.species).n + " is not in your dex yet.", true, "not in your dex");
-      else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex.", true, "new to your dex", "Catch it.");
+      else if (dexNews(enemy, ctx.system)) add("want", "This " + data.sp(enemy.species).n + " has something new for your dex.", true, "new for your dex");
       else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true, "shiny you do not own");
     }
     var matches = scout(enemy, ctx, exact);

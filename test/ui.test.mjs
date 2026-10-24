@@ -71,7 +71,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
   await check("phase tabs switch views", async () => {
     await page.click("#tab-carry"); assert.equal(await h1(page), "Carry");
     await page.click("#tab-run"); assert.equal(await h1(page), "Running");
-    await page.click("#tab-sync"); assert.match(await h1(page), /read your run/);
+    await page.click("#tab-sync"); assert.match(await h1(page), /^Sync$/);
     await page.click("#tab-party"); assert.equal(await h1(page), "Party building");
     assert.equal(await page.getAttribute("#tab-party", "aria-selected"), "true");
   });
@@ -82,7 +82,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     const plus = role => page.click(`.stepper button[data-bind="reductions.${role}"][data-d="1"]`);
     await plus("carry"); await plus("carry"); await plus("runner"); await plus("runner"); await plus("killer");
     assert.match(await text(page, ".meter-top strong"), /15 \/ 15/);
-    assert.match(await text(page, ".panel .callout.good"), /the team fits/);
+    assert.match(await text(page, ".panel .callout.good"), /15 of 15 points/);
     await plus("carry");   // capped at two
     assert.match(await text(page, ".meter-top strong"), /15 \/ 15/);
   });
@@ -137,7 +137,30 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.match(sturdy, /Magnezone/);
   });
 
-  await check("carry: the scout box finds a species and says what it offers", async () => {
+  await check("the Pokédex opens from a species chip, closes on a click elsewhere, stays pinned, closes on Escape", async () => {
+    assert.equal(await page.locator("#dex").isVisible(), false, "closed to begin with");
+    await page.locator('details[data-open-id="cand-s3"] .chip', { hasText: "Garganacl" }).first().click();
+    assert.equal(await page.locator("#dex").isVisible(), true, "a chip opens it");
+    assert.match(await text(page, "#scout-card"), /Garganacl/);
+    assert.equal(await page.locator("#scout-panel").count(), 0, "no panel in the column any more");
+    await page.click(".view-head h1");
+    assert.equal(await page.locator("#dex").isVisible(), false, "a click elsewhere closes it");
+    await page.click("#dex-btn");
+    assert.equal(await page.locator("#dex").isVisible(), true, "the bar button opens it");
+    assert.equal(await page.evaluate(() => document.activeElement.id), "scout-q", "and focuses the search box");
+    await page.click("#dex-pin");
+    assert.equal(await page.getAttribute("#dex-pin", "aria-pressed"), "true");
+    await page.click(".view-head h1");
+    assert.equal(await page.locator("#dex").isVisible(), true, "pinned, a click elsewhere leaves it open");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("#dex").isVisible(), false, "Escape closes it even when pinned");
+    await page.click("#dex-pin").catch(() => {});
+    await page.click("#dex-btn");
+    await page.click("#dex-pin");   // unpin again for the checks that follow
+    assert.equal(await page.getAttribute("#dex-pin", "aria-pressed"), "false");
+  });
+
+  await check("the Pokédex search finds a species and says what it offers", async () => {
     await page.fill("#scout-q", "thro");
     await page.waitForSelector("#scout-hits button.chip");
     await page.locator("#scout-hits button.chip", { hasText: "Throh" }).click();
@@ -201,7 +224,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.match(await page.locator(".verdict").innerText(), /Eternatus/);
   });
 
-  await check("running: the boss desk gives Slither Wing the Sturdy line and keeps step ticks", async () => {
+  await check("running: the boss panel gives Slither Wing the Sturdy line and keeps step ticks", async () => {
     await page.locator('button[data-act="boss-pick"]', { hasText: "Slither Wing" }).click();
     const desk = await text(page, "#boss-panel");
     assert.match(desk, /needs a different line/i);
@@ -286,7 +309,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.equal(await variants.locator(".check-label").first().isVisible(), true);
   });
 
-  await check("density: the verdict, boss desk and checklists survive Compact on the other tabs", async () => {
+  await check("density: the verdict, boss panel and checklists survive Compact on the other tabs", async () => {
     await page.click("#tab-carry");
     assert.equal(await visible(".steps .step-title"), true);
     assert.equal(await visible(".step-how"), false);
@@ -465,6 +488,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
 
   await check("typing or pasting ordinary text into a field is left alone", async () => {
     await page.click("#tab-run");
+    await page.click("#dex-btn");
     await page.evaluate(() => {
       const el = document.getElementById("scout-q"); el.focus();
       const dt = new DataTransfer(); dt.setData("text/plain", "U2FsdGVkX1-not-a-save");
