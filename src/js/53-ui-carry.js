@@ -77,8 +77,11 @@
       ctx.session ? "ticks follow your save" : "tick by hand, or sync");
   }
 
-  function itemsPanel(ctx) {
+  /** Item targets for the final team. phase: "carry" or "run"; the Running tab shows the same counts so eggs can be tracked without switching back. */
+  function itemsPanel(ctx, phase) {
     var audit = adv.itemAudit(ctx);
+    var all = audit.roles.reduce(function (acc, r) { return acc.concat(r.rows); }, []).concat(audit.bag);
+    var left = all.filter(function (row) { return !row.done; });
     var roles = audit.roles.map(function (r) {
       var rows = r.rows.map(function (row) {
         var count = audit.synced ? '<span class="cnt">' + row.have + " / " + row.target + "</span>" : H.stepper("items." + r.role + ":" + row.key, row.have, 0, row.target);
@@ -92,9 +95,12 @@
     }).join("");
     var balls = audit.balls ? '<div class="audit-row' + (audit.balls.master >= 50 ? " done" : "") + '"><span>Master Balls <span class="sub">about 50 before running</span></span><span class="cnt">' + audit.balls.master + " / 50</span>" + H.segbar(audit.balls.master, 50, "go") +
       '</div><div class="audit-row"><span>Rogue Balls</span><span class="cnt">' + audit.balls.rogue + "</span><span></span></div>" : "";
-    return H.panel("Items", '<div class="audit">' + roles + '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div></div>" +
-      '<p class="sub">Don\'t wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.</p>',
-      audit.synced ? "counted from your save" : "set counts by hand, or sync");
+    var meter = '<div class="meter"><div class="meter-top"><span>' + (left.length ? (phase === "run" ? "Still to collect while you run: " : "Still to collect: ") + left.map(function (row) { return h(row.name); }).join(", ") : "Every item target is met.") +
+      '</span><strong class="num">' + (all.length - left.length) + " / " + all.length + "</strong></div>" + H.segbar(all.length - left.length, all.length, "go") + "</div>";
+    var note = phase === "run" ? '<p class="sub">Eggs and Grip Claws come off wild Pokémon only: Thief or Mini Black Hole whatever carries one, or catch it. Vitamins cannot be stolen; Carbos come through fuse-and-dump.</p>'
+      : '<p class="sub">Don\'t wait for every egg: start running and keep stealing. Grip Claws only work on attacking moves, so they belong on whoever attacks, not on Jynxgigas.</p>';
+    return H.panel("Items", meter + '<div class="audit">' + roles + '<div class="audit-role"><div class="row between"><strong>Bag</strong></div>' + bag + balls + "</div></div>" + note,
+      audit.synced ? "counted from your save" : "set counts by hand, or sync", ' id="items-' + (phase || "carry") + '"');
   }
 
   function readyPanel(ctx) {
@@ -114,7 +120,7 @@
 
   ui.views.carry = function (ctx) {
     return '<div class="view-head"><p class="eyebrow">Phase 2 · waves 1 to about 1000</p><h1>Carry</h1><p class="lede">Regigigas kills every double battle with one spread move while the other five learn their moves through fusions. The whole setup can be done by wave 1000.</p></div>' +
-      '<div class="cols"><div class="col">' + nowPanel(ctx) + splicePanel(ctx) + '</div><div class="col">' + F.lurePanel(ctx, "carry") + carryKit(ctx) + F.scoutPanel(ctx, "carry") + itemsPanel(ctx) + readyPanel(ctx) + "</div></div>";
+      '<div class="cols"><div class="col">' + nowPanel(ctx) + splicePanel(ctx) + '</div><div class="col">' + F.lurePanel(ctx, "carry") + carryKit(ctx) + F.scoutPanel(ctx, "carry") + itemsPanel(ctx, "carry") + readyPanel(ctx) + "</div></div>";
   };
 
   ui.on("step-toggle", function (t) {

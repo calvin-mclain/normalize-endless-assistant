@@ -212,7 +212,7 @@
     var r = adv.readiness(ctx);
     var warn = ctx.session && !r.ready ? H.callout("warn", "Your synced team is not ready to run yet", r.open + " must-have" + (r.open === 1 ? "" : "s") + ' open. <button type="button" class="btn link" data-act="tab" data-tab="carry">See the Carry checklist</button>') : "";
     return '<div class="view-head"><p class="eyebrow">Phase 3</p><h1>Running</h1><p class="lede">Mega Gouot in slot 1, Teddiurk in slot 2, every wave a double. Three checks a wave; everything else is Run.</p></div>' + warn +
-      '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel(ctx) + troublePanel() + '</div><div class="col">' + positionPanel(ctx) + F.lurePanel(ctx, "run") + shopPanel(ctx) + speedPanel(ctx) + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
+      '<div class="cols"><div class="col">' + nowPanel(ctx) + bossPanel(ctx) + catchPanel(ctx) + troublePanel() + '</div><div class="col">' + positionPanel(ctx) + F.lurePanel(ctx, "run") + shopPanel(ctx) + ui.carry.itemsPanel(ctx, "run") + speedPanel(ctx) + freePanel(ctx) + F.scoutPanel(ctx, "run") + "</div></div>";
   };
 
   ui.on("wave-next", function () {

@@ -160,6 +160,18 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.ok((await row.getAttribute("class")).includes("done"));
   });
 
+  await check("running: the Items panel is there too and shares the hand-set counts", async () => {
+    await page.click("#tab-run");
+    const items = page.locator("#items-run");
+    assert.equal(await items.count(), 1, "the Running tab has its own copy of the Items panel");
+    const row = items.locator(".audit-row", { hasText: "Wide Lens" }).first();
+    assert.match(await row.locator("output").innerText(), /^3$/, "the count set on the Carry tab carries over");
+    assert.match(await items.locator(".meter-top").innerText(), /Still to collect while you run/);
+    await items.locator('.stepper button[data-bind="items.staller:WIDE_LENS"][data-d="-1"]').click();
+    await page.click("#tab-carry");
+    assert.match(await page.locator("#items-carry .audit-row", { hasText: "Wide Lens" }).first().locator("output").innerText(), /^2$/, "a change on the Running tab shows on the Carry tab");
+  });
+
   await check("running: the manual wave caller knows the 50-wave rhythm", async () => {
     await page.click("#tab-run");
     assert.equal(await text(page, ".verdict-call"), "Run");
@@ -506,6 +518,7 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     assert.equal(await page.evaluate(() => !!NZ.ui.game.system), true, "unlocks arrived with the first message");
     await page.click("#tab-run");
     assert.equal(await text(page, ".verdict-call"), "Stay");
+    assert.match(await text(page, "#items-run .meta"), /counted from your save/, "the Running tab's Items panel counts from the synced save");
   });
 
   await check("a new wave in the game tab shows up by itself within two seconds", async () => {
