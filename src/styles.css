@@ -182,6 +182,27 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 0.88em; }
 .dot.stale { background: var(--warn); }
 .dot.sample { background: var(--info); }
 
+/* ---------- Pokédex popover: fixed under the bar, right-aligned; pinned it stays while you click around ---------- */
+.dex-btn {
+  padding: 7px 12px; border: 2px solid var(--line); border-radius: var(--r); background: var(--raised); cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap;
+}
+.dex-btn:hover { color: var(--ink); }
+.dex-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.dex {
+  position: fixed; right: 16px; z-index: 30;
+  width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 140px);
+  overflow: auto; overscroll-behavior: contain;
+  background: var(--raised); border: 2px solid var(--accent); border-radius: var(--r); box-shadow: var(--shadow);
+  display: grid; gap: 10px; padding: 10px 14px 14px;
+}
+.dex[hidden] { display: none; }
+.dex-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dex-h h2 { font-family: var(--font-display); font-weight: 600; font-size: 17px; }
+.dex-h .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.dex-b { display: grid; gap: 10px; min-width: 0; }
+.dex .foe { border-color: var(--line); }
+
 /* ---------- page ---------- */
 .shell { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 72px; display: grid; gap: var(--gap); }
 .view-head { display: grid; gap: 4px; }
@@ -458,6 +479,8 @@ textarea.paste { width: 100%; min-height: 64px; resize: vertical; font-family: v
   .bar-in { justify-content: space-between; }
   .bar-right { margin-left: 0; flex: 1 1 auto; justify-content: space-between; }
   .density-btn { padding: 6px 8px; font-size: 12.5px; }
+  .dex-btn { padding: 6px 8px; font-size: 12.5px; }
+  .dex { right: 8px; width: calc(100vw - 16px); max-height: calc(100vh - 170px); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .toast { animation: rise 0.18s ease-out; }

@@ -123,12 +123,12 @@
       H.details("scout-moves", "Level-up moves (" + lm.length + ")", '<div class="chips">' + moveChips + "</div>" + H.teach("Wild Pokémon only know level-up moves. A fused Pokémon can relearn any of these with a Memory Mushroom.", "sub")) + "</div>";
   }
 
-  function scoutPanel(ctx, phase) {
-    var st = ui.state;
-    var card = st.scout ? scoutCard(st.scout, st.scoutForm || 0, ctx, phase) : H.teach("Type a wild Pokémon's name to see what it offers: moves for an open splice step, a Sturdy or lure ability, or a free-slot role.", "sub");
-    return H.panel("Scout a Pokémon", '<label class="field" for="scout-q">Species<input type="search" id="scout-q" data-live="scout" autocomplete="off" placeholder="Throh, Golurk, Garganacl…"></label><div id="scout-hits" class="chips"></div><div id="scout-card">' + card + "</div>",
-      "from game data, no sync needed", ' id="scout-panel"');
-  }
+  /** Body of the Pokédex popover: a search box, its hits, and the card for the chosen species. */
+  ui.dexView = function (ctx) {
+    var st = ui.state, phase = st.tab === "run" ? "run" : "carry";
+    var card = st.scout ? scoutCard(st.scout, st.scoutForm || 0, ctx, phase) : H.teach("Type a species name, or click any Pokémon on the page. The card says what it offers: moves for an open splice step, a Sturdy or lure ability, or a free-slot role. From game data, no sync needed.", "sub");
+    return '<div class="dex-b"><label class="field" for="scout-q">Species<input type="search" id="scout-q" data-live="scout" autocomplete="off" placeholder="Throh, Golurk, Garganacl…"></label><div id="scout-hits" class="chips"></div><div id="scout-card">' + card + "</div></div>";
+  };
 
   ui.live("scout", function (input) {
     var box = document.getElementById("scout-hits");
@@ -139,11 +139,10 @@
   ui.on("scout", function (t) {
     ui.state.scout = Number(t.getAttribute("data-id")) || 0;
     ui.state.scoutForm = Number(t.getAttribute("data-form")) || 0;
-    if (ui.state.tab !== "carry" && ui.state.tab !== "run") ui.state.tab = "carry";
-    ui.persist(); ui.render();
-    var p = document.getElementById("scout-panel");
-    if (p && p.scrollIntoView) p.scrollIntoView({ block: "nearest" });
+    ui.openDex(false);
+    var d = document.getElementById("dex");
+    if (d) d.scrollTop = 0;
   });
 
-  ui.field = { waveLine: waveLine, foeCard: foeCard, ruler: ruler, lurePanel: lurePanel, scoutPanel: scoutPanel, itemList: itemList, odds: odds };
+  ui.field = { waveLine: waveLine, foeCard: foeCard, ruler: ruler, lurePanel: lurePanel, itemList: itemList, odds: odds };
 })();

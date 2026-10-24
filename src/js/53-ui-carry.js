@@ -124,7 +124,7 @@
 
   ui.views.carry = function (ctx) {
     return '<div class="view-head"><p class="eyebrow">Phase 2 · waves 1 to about 1000</p><h1>Carry</h1><p class="lede">Regigigas kills every double battle with one spread move while the other five learn their moves through fusions. The whole setup can be done by wave 1000.</p></div>' +
-      '<div class="cols"><div class="col">' + nowPanel(ctx) + splicePanel(ctx) + '</div><div class="col">' + F.lurePanel(ctx, "carry") + carryKit(ctx) + F.scoutPanel(ctx, "carry") + itemsPanel(ctx, "carry") + readyPanel(ctx) + "</div></div>";
+      '<div class="cols"><div class="col">' + nowPanel(ctx) + splicePanel(ctx) + '</div><div class="col">' + F.lurePanel(ctx, "carry") + carryKit(ctx) + itemsPanel(ctx, "carry") + readyPanel(ctx) + "</div></div>";
   };
 
   ui.on("step-toggle", function (t) {
