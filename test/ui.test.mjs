@@ -615,9 +615,12 @@ const sysNew = readFileSync(`${FIXTURES}/data_new.prsv`, "utf8");
     await seed.evaluate(s => localStorage.setItem("sessionData_Tester", s), encryptPrsv(JSON.stringify(newer)));
     await page.waitForFunction(() => /Live · Wave 1,764/.test(document.querySelector("#tab-sync").innerText), null, { timeout: 4000 });
     assert.equal(await text(page, ".verdict-call"), "Run");
-    // the unlock save has bought no cost reductions: each card states what its starter still needs
-    assert.equal(await page.locator(".foe .pill.candy").count(), 2);
-    assert.match(await page.locator(".foe").first().innerText(), /Rattata needs 25 candies more for its first cost reduction \(has 0 of 25\), 2 unlocks left\. A catch gives 1\./);
+    // the unlock save has bought no cost reductions: each card shows candies toward the next unlock, not a sentence
+    assert.equal(await page.locator(".foe .candy-row").count(), 2);
+    const row = page.locator(".foe .candy-row").first();
+    assert.match(await row.innerText(), /^Rattata\s+0 \/ 25\s+first cost reduction\s+2 left\s+\+1$/i);
+    assert.equal(await row.locator(".candy-bar i").getAttribute("style"), "width:0.0%");
+    assert.doesNotMatch(await page.locator(".foe").first().innerText(), /needs|A catch gives/);
     assert.match(await text(page, ".wave-num"), /1,764/);
   });
 

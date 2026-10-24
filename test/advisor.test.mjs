@@ -244,26 +244,25 @@ assert.ok(v.reasons.some(r => /not in your dex/.test(r.text)));
   // no starter entry: the save cannot tell, so no candy line and the wave is still a plain run
   v = adv.verdict(adv.makeContext({ session: plain, roster, system: { ...dexAll(), starters: {} } }));
   assert.equal(v.action, "run");
-  assert.ok(v.scans.every(sc => sc.candy === null && !sc.alerts.some(a => a.sev === "candy")));
-  // the candy line states facts and never changes the call: fully unlocked
+  assert.ok(v.scans.every(sc => sc.candy === null));
+  // candy state is data on the scan, never an alert, and never changes the call: fully unlocked
   v = adv.verdict(adv.makeContext({ session: plain, roster, system: { ...dexAll(), starters: { [RAT]: st(12, 2, true), [WIN]: st(3, 2, true) } } }));
   assert.equal(v.action, "run", JSON.stringify(v.reasons));
-  const candyLine = (sc) => sc.alerts.find(a => a.sev === "candy");
-  assert.equal(candyLine(v.scans[0]).text, "Rattata is fully unlocked (12 candies).");
-  assert.ok(v.scans.every(sc => !candyLine(sc).want));
+  assert.ok(v.scans.every(sc => !sc.alerts.some(a => a.sev === "candy")));
+  assert.deepEqual([v.scans[0].candy.left, v.scans[0].candy.candy, v.scans[0].candy.name], [[], 12, "Rattata"]);
   // Wingull still owes its passive and cannot pay
   let sys = { ...dexAll(), starters: { [RAT]: st(12, 2, true), [WIN]: st(1, 2, false) } };
   v = adv.verdict(adv.makeContext({ session: plain, roster, system: sys }));
   assert.equal(v.action, "run");
   assert.equal(v.reasons.length, 0);
-  assert.equal(candyLine(v.scans[1]).text, "Wingull needs 39 candies more for its passive (has 1 of 40), 1 unlock left. A catch gives 1.");
+  assert.deepEqual([v.scans[1].candy.next, v.scans[1].candy.short, v.scans[1].candy.candy], [{ what: "passive", cost: 40 }, 39, 1]);
   assert.ok(!v.scans[1].wanted);
   // enough candies banked for the next unlock
   sys.starters[WIN] = st(40, 2, false);
   v = adv.verdict(adv.makeContext({ session: plain, roster, system: sys }));
-  assert.equal(candyLine(v.scans[1]).text, "Wingull can already buy its passive (has 40 of 40), 1 unlock left. A catch gives 1.");
-  assert.equal(candyLine(adv.scanEnemy(plain.enemies[0], adv.makeContext({ session: plain, roster, system: { ...dexAll(), starters: { [RAT]: st(5, 0, false), [WIN]: st(0, 0, false) } } }), "run")).text,
-    "Rattata needs 35 candies more for its passive (has 5 of 40), 3 unlocks left. A catch gives 1.");
+  assert.equal(v.scans[1].candy.short, 0);
+  const rat = adv.scanEnemy(plain.enemies[0], adv.makeContext({ session: plain, roster, system: { ...dexAll(), starters: { [RAT]: st(5, 0, false), [WIN]: st(0, 0, false) } } }), "run").candy;
+  assert.deepEqual([rat.short, rat.left.length, rat.next.what], [35, 3, "passive"]);
   // both worth catching for the dex: more unlocks left goes first (Rattata 3 against Wingull 1)
   sys.abilities = { [RAT]: 0, [WIN]: 0 };
   sys.starters = { [RAT]: st(5, 0, false), [WIN]: st(0, 2, false) };
@@ -283,7 +282,7 @@ assert.ok(v.reasons.some(r => /not in your dex/.test(r.text)));
   v = adv.verdict(adv.makeContext({ session: plain, roster, system: sys }));
   assert.equal(v.action, "stay");
   assert.deepEqual(v.catches.map(r => r.who), ["Pelipper"]);
-  assert.ok(!v.reasons.some(r => r.sev === "candy") && !v.notes.some(n => /first/.test(n)));
+  assert.ok(!v.notes.some(n => /first/.test(n)));
   // candy per catch, from GameData.setPokemonSpeciesCaught: ×5·2^variant for a shiny, ×2 for a boss, capped at 9,999
   const need = (extra, starter) => adv.candyNeed({ species: plain.enemies[1].species, ...extra }, { kind: "system", starters: { [WIN]: starter } });
   assert.equal(need({}, st(0, 0, false)).gain, 1);
@@ -294,9 +293,9 @@ assert.ok(v.reasons.some(r => /not in your dex/.test(r.text)));
   assert.deepEqual(need({}, st(0, 1, true)).left.map(x => x.what), ["second cost reduction"]);
   assert.equal(need({}, st(0, 0, false)).rank[0], 3);
   assert.equal(adv.candyNeed({ species: 99999 }, { kind: "system", starters: {} }), null);
-  // the carry phase shows the same line
+  // the carry phase carries the same state
   const sc = adv.scanEnemy(plain.enemies[1], adv.makeContext({ session: plain, roster, system: { ...dexAll(), starters: { [RAT]: st(0, 2, true), [WIN]: st(0, 2, false) } } }), "carry");
-  assert.ok(candyLine(sc) && !sc.wanted);
+  assert.ok(sc.candy && sc.candy.left.length === 1 && !sc.wanted);
 }
 
 // ---------- Power Construct fusion: Entrainment cannot work ----------

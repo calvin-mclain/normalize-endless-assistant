@@ -3,7 +3,7 @@
   "use strict";
   var ui = NZ.ui, util = NZ.util, data = NZ.data, kb = NZ.kb, adv = NZ.advisor, h = util.esc, H = ui.html;
 
-  var ALERT_PILL = { shiny: ["shiny", "shiny"], want: ["catch", "ok"], maybe: ["check", "info"], candy: ["candy", "candy"], item: ["item", "todo"], info: ["note", "quiet"] };
+  var ALERT_PILL = { shiny: ["shiny", "shiny"], want: ["catch", "ok"], maybe: ["check", "info"], item: ["item", "todo"], info: ["note", "quiet"] };
   var KIND_PILL = { normal: "quiet", x0: "todo", paradox: "bad", eternatus: "bad", eternamax: "bad" };
 
   function itemList(items) {
@@ -27,6 +27,19 @@
     return '<div class="sub">Ability ' + H.ab(e.ability) + (e.passiveOn ? " · passive " + H.ab(e.passive) : "") + (e.stats.length ? ' · Speed <span class="num">' + util.short(e.stats[5]) + "</span>" : "") + '</div><div class="chips">' + moves + "</div>";
   }
 
+  /** Candy state of the root starter: a quiet "fully unlocked" pill, or a bar of candies toward the next unlock. */
+  function candyRow(c, enemy) {
+    if (!c) return "";
+    var who = c.root !== enemy.species ? '<span class="candy-who">' + h(c.name) + "</span>" : "";
+    if (!c.left.length) return '<div class="candy-row">' + who + H.pill("fully unlocked", "quiet") + "</div>";
+    var pct = Math.max(0, Math.min(100, c.candy / c.next.cost * 100));
+    var title = c.name + ": " + c.candy + " of " + c.next.cost + " candies for the " + c.next.what + "; " + c.left.length + " unlock" + (c.left.length === 1 ? "" : "s") + " left; this catch gives " + c.gain;
+    return '<div class="candy-row" title="' + h(title) + '">' + who +
+      '<span class="candy-bar" role="img" aria-label="' + h(c.candy + " of " + c.next.cost + " candies") + '"><i style="width:' + pct.toFixed(1) + '%"></i></span>' +
+      '<span class="num">' + c.candy + " / " + c.next.cost + '</span><span class="sub">' + h(c.next.what) + "</span>" +
+      H.pill(c.left.length + " left", "quiet") + H.pill("+" + c.gain, "candy") + "</div>";
+  }
+
   function foeCard(enemy, scan, ctx) {
     var tags = "";
     if (enemy.shiny) tags += " " + H.pill("shiny", "shiny");
@@ -38,7 +51,7 @@
       return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + "</span></li>";
     }).join("");
     return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
-      (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") +
+      (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") + candyRow(scan.candy, enemy) +
       (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing here for the build.</div>') +
       '<div><button type="button" class="btn link" data-act="scout" data-id="' + enemy.species + '" data-form="' + enemy.form + '">Species details</button></div></div>';
   }

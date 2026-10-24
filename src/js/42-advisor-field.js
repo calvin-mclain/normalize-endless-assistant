@@ -321,16 +321,6 @@
     return b.rank[0] - a.rank[0] || a.rank[1] - b.rank[1];
   }
 
-  /** The candy facts for a wild Pokémon's card: fully unlocked, or what its starter still needs. */
-  function candyText(c) {
-    var candies = function (n) { return n + (n === 1 ? " candy" : " candies"); };
-    if (!c.left.length) return c.name + " is fully unlocked (" + candies(c.candy) + ").";
-    var left = c.left.length === 1 ? "1 unlock left" : c.left.length + " unlocks left";
-    var need = c.short ? "needs " + candies(c.short) + " more for its " + c.next.what + " (has " + c.candy + " of " + c.next.cost + ")"
-      : "can already buy its " + c.next.what + " (has " + c.candy + " of " + c.next.cost + ")";
-    return c.name + " " + need + ", " + left + ". A catch gives " + c.gain + ".";
-  }
-
   /** Free-slot pickups for the running phase: Whimsicott-style Tailwind and a Mold Breaker Gastro Acid body. */
   function freeSlotMatches(desc, ctx) {
     var out = [];
@@ -379,9 +369,8 @@
       else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex. Catch it.", true);
       else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true);
     }
-    // candy: facts only (fully unlocked, or what its starter still needs); the order between two catches uses them
+    // candy: state for the card (fully unlocked, or candies toward the next unlock); the order between two catches uses it
     var candy = candyNeed(enemy, ctx.system);
-    if (candy) add("candy", candyText(candy), false);
     var matches = scout(enemy, ctx, exact);
     matches.forEach(function (m) {
       if (m.weak) return;

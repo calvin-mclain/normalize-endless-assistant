@@ -241,7 +241,7 @@ NZ.kb = (function () {
   var catching = [
     "A shiny on a normal wave: Master Ball it if you cannot afford to lose it. Shinies have a 2× catch bonus, so a Rogue Ball usually works on anything you can weaken first.",
     "Running low on balls: catch something that is not a boss with Rogue Balls just to reach a shop.",
-    "Candies: every catch gives 1 candy to the root starter of the chain (5, 10 or 20 for a shiny by tier; doubled for a boss). The shop buys the passive and two cost reductions. With a synced save each wild Pokémon's card says whether its starter is fully unlocked or how many more candies it needs; when two are worth catching, take the one with more unlocks left, then the one with fewer candies."
+    "Candies: every catch gives 1 candy to the root starter of the chain (5, 10 or 20 for a shiny by tier; doubled for a boss). The shop buys the passive and two cost reductions. With a synced save each wild Pokémon's card shows whether its starter is fully unlocked or how far its candies are from the next unlock; when two are worth catching, take the one with more unlocks left, then the one with fewer candies."
   ];
 
   var freeSlots = [

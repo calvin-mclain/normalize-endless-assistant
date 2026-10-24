@@ -392,6 +392,10 @@ tbody th { font-weight: 700; }
 .foe.wanted { border-color: var(--shiny); border-width: 2px; }
 .foe.steal { border-color: var(--khaki); }
 .foe-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.candy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.candy-who { font-weight: 600; }
+.candy-bar { flex: 1 1 60px; min-width: 60px; max-width: 160px; height: 8px; border-radius: 4px; background: var(--candy-soft); overflow: hidden; }
+.candy-bar i { display: block; height: 100%; background: var(--candy); border-radius: 4px; }
 .foe-name { font-weight: 700; font-size: 15.5px; }
 .alerts { display: grid; gap: 4px; font-size: 13.5px; }
 .alert { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: baseline; }

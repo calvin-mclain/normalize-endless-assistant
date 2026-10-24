@@ -397,6 +397,10 @@ tbody th { font-weight: 700; }
 .foe.wanted { border-color: var(--shiny); border-width: 2px; }
 .foe.steal { border-color: var(--khaki); }
 .foe-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.candy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.candy-who { font-weight: 600; }
+.candy-bar { flex: 1 1 60px; min-width: 60px; max-width: 160px; height: 8px; border-radius: 4px; background: var(--candy-soft); overflow: hidden; }
+.candy-bar i { display: block; height: 100%; background: var(--candy); border-radius: 4px; }
 .foe-name { font-weight: 700; font-size: 15.5px; }
 .alerts { display: grid; gap: 4px; font-size: 13.5px; }
 .alert { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: baseline; }
@@ -1170,7 +1174,7 @@ NZ.kb = (function () {
   var catching = [
     "A shiny on a normal wave: Master Ball it if you cannot afford to lose it. Shinies have a 2× catch bonus, so a Rogue Ball usually works on anything you can weaken first.",
     "Running low on balls: catch something that is not a boss with Rogue Balls just to reach a shop.",
-    "Candies: every catch gives 1 candy to the root starter of the chain (5, 10 or 20 for a shiny by tier; doubled for a boss). The shop buys the passive and two cost reductions. With a synced save each wild Pokémon's card says whether its starter is fully unlocked or how many more candies it needs; when two are worth catching, take the one with more unlocks left, then the one with fewer candies."
+    "Candies: every catch gives 1 candy to the root starter of the chain (5, 10 or 20 for a shiny by tier; doubled for a boss). The shop buys the passive and two cost reductions. With a synced save each wild Pokémon's card shows whether its starter is fully unlocked or how far its candies are from the next unlock; when two are worth catching, take the one with more unlocks left, then the one with fewer candies."
   ];
 
   var freeSlots = [
@@ -2640,16 +2644,6 @@ NZ.advisor = (function () {
     return b.rank[0] - a.rank[0] || a.rank[1] - b.rank[1];
   }
 
-  /** The candy facts for a wild Pokémon's card: fully unlocked, or what its starter still needs. */
-  function candyText(c) {
-    var candies = function (n) { return n + (n === 1 ? " candy" : " candies"); };
-    if (!c.left.length) return c.name + " is fully unlocked (" + candies(c.candy) + ").";
-    var left = c.left.length === 1 ? "1 unlock left" : c.left.length + " unlocks left";
-    var need = c.short ? "needs " + candies(c.short) + " more for its " + c.next.what + " (has " + c.candy + " of " + c.next.cost + ")"
-      : "can already buy its " + c.next.what + " (has " + c.candy + " of " + c.next.cost + ")";
-    return c.name + " " + need + ", " + left + ". A catch gives " + c.gain + ".";
-  }
-
   /** Free-slot pickups for the running phase: Whimsicott-style Tailwind and a Mold Breaker Gastro Acid body. */
   function freeSlotMatches(desc, ctx) {
     var out = [];
@@ -2698,9 +2692,8 @@ NZ.advisor = (function () {
       else if (dexNews(enemy, ctx.system)) add("want", "Something about this " + data.sp(enemy.species).n + " is new to your dex. Catch it.", true);
       else if (dexNews(enemy, ctx.system) === null && enemy.shiny && ctx.system.shiny.indexOf(enemy.species) === -1) add("want", "You do not own this shiny.", true);
     }
-    // candy: facts only (fully unlocked, or what its starter still needs); the order between two catches uses them
+    // candy: state for the card (fully unlocked, or candies toward the next unlock); the order between two catches uses it
     var candy = candyNeed(enemy, ctx.system);
-    if (candy) add("candy", candyText(candy), false);
     var matches = scout(enemy, ctx, exact);
     matches.forEach(function (m) {
       if (m.weak) return;
@@ -3227,7 +3220,7 @@ NZ.ui = (function () {
   "use strict";
   var ui = NZ.ui, util = NZ.util, data = NZ.data, kb = NZ.kb, adv = NZ.advisor, h = util.esc, H = ui.html;
 
-  var ALERT_PILL = { shiny: ["shiny", "shiny"], want: ["catch", "ok"], maybe: ["check", "info"], candy: ["candy", "candy"], item: ["item", "todo"], info: ["note", "quiet"] };
+  var ALERT_PILL = { shiny: ["shiny", "shiny"], want: ["catch", "ok"], maybe: ["check", "info"], item: ["item", "todo"], info: ["note", "quiet"] };
   var KIND_PILL = { normal: "quiet", x0: "todo", paradox: "bad", eternatus: "bad", eternamax: "bad" };
 
   function itemList(items) {
@@ -3251,6 +3244,19 @@ NZ.ui = (function () {
     return '<div class="sub">Ability ' + H.ab(e.ability) + (e.passiveOn ? " · passive " + H.ab(e.passive) : "") + (e.stats.length ? ' · Speed <span class="num">' + util.short(e.stats[5]) + "</span>" : "") + '</div><div class="chips">' + moves + "</div>";
   }
 
+  /** Candy state of the root starter: a quiet "fully unlocked" pill, or a bar of candies toward the next unlock. */
+  function candyRow(c, enemy) {
+    if (!c) return "";
+    var who = c.root !== enemy.species ? '<span class="candy-who">' + h(c.name) + "</span>" : "";
+    if (!c.left.length) return '<div class="candy-row">' + who + H.pill("fully unlocked", "quiet") + "</div>";
+    var pct = Math.max(0, Math.min(100, c.candy / c.next.cost * 100));
+    var title = c.name + ": " + c.candy + " of " + c.next.cost + " candies for the " + c.next.what + "; " + c.left.length + " unlock" + (c.left.length === 1 ? "" : "s") + " left; this catch gives " + c.gain;
+    return '<div class="candy-row" title="' + h(title) + '">' + who +
+      '<span class="candy-bar" role="img" aria-label="' + h(c.candy + " of " + c.next.cost + " candies") + '"><i style="width:' + pct.toFixed(1) + '%"></i></span>' +
+      '<span class="num">' + c.candy + " / " + c.next.cost + '</span><span class="sub">' + h(c.next.what) + "</span>" +
+      H.pill(c.left.length + " left", "quiet") + H.pill("+" + c.gain, "candy") + "</div>";
+  }
+
   function foeCard(enemy, scan, ctx) {
     var tags = "";
     if (enemy.shiny) tags += " " + H.pill("shiny", "shiny");
@@ -3262,7 +3268,7 @@ NZ.ui = (function () {
       return '<li class="alert">' + H.pill(p[0], p[1]) + "<span>" + h(a.text) + "</span></li>";
     }).join("");
     return '<div class="foe' + (scan.wanted ? " wanted" : scan.steal ? " steal" : "") + '"><div class="foe-top">' + H.monHead(enemy) + tags + "</div>" +
-      (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") +
+      (items ? '<div class="sub">Holds: ' + items + "</div>" : "") + (ctx.peek ? hiddenLine(enemy) : "") + candyRow(scan.candy, enemy) +
       (alerts ? '<ul class="alerts">' + alerts + "</ul>" : '<div class="sub">Nothing here for the build.</div>') +
       '<div><button type="button" class="btn link" data-act="scout" data-id="' + enemy.species + '" data-form="' + enemy.form + '">Species details</button></div></div>';
   }
